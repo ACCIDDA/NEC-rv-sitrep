@@ -1,0 +1,347 @@
+
+---
+title: "Respiratory Virus Situation Report (AZ, NM, UT)"
+subtitle: "NHSN hospital admissions + NSSP ED visits (Flu, COVID-19, RSV)"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: cosmo
+params:
+  state_names: ["Arizona", "New Mexico", "Utah"]
+  geo_ids: ["az", "nm", "ut"]
+  diseases: ["influenza", "covid", "rsv"]
+  weeks_back: 12
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(
+  fig.align = "center",
+  out.width = "100%",
+  fig.retina = 2,
+  fig.width = 12, 
+  fig.height = 6
+)
+
+# Install & load packages 
+
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
+  remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
+}
+
+cran_pkgs <- c(
+  "tidyverse","jsonlite","epidatr","epiprocess","lubridate",
+  "readr","gt","scales","ggplot2","janitor"
+)
+
+to_install <- setdiff(cran_pkgs, rownames(installed.packages()))
+if (length(to_install)) install.packages(to_install, dependencies = TRUE)
+
+library(AMPHForecastSuite)
+library(tidyverse)
+library(jsonlite)
+library(epidatr)
+library(epiprocess)
+library(lubridate)
+library(readr)
+library(gt)
+library(scales)
+library(ggplot2)
+library(janitor)
+
+
+# Parameters
+state_names <- params$state_names
+geo_ids <- params$geo_ids
+forecast_diseases <- params$disease
+weeks_back <- params$weeks_back
+
+
+# Forecast date (hubverse style) = most recent Sunday, Mountain Time
+
+today <- lubridate::today(tzone = "America/Denver")
+forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7))
+
+# Location reference table from package (if available)
+
+if ("loc_data" %in% data(package = "AMPHForecastSuite")$results[, "Item"]) {
+  data("loc_data", package = "AMPHForecastSuite")
+} else {
+  loc_data <- tibble(abbreviation = toupper(geo_ids),
+                     location = toupper(geo_ids),
+                     location_name = state_names)
+}
+
+```
+
+
+```{r helper-func, include=FALSE}
+
+# Ensure we have abbreviation, location, and location_name
+
+ensure_locations <- function(df, geo_ids, state_names, loc_data = NULL) {
+  df <- tibble::as_tibble(df)
+
+  # Make/standardize abbreviation
+  if (!"abbreviation" %in% names(df)) {
+    if ("geo_value" %in% names(df)) {
+      df <- dplyr::mutate(df, abbreviation = toupper(.data$geo_value))
+    } else {
+      stop("ensure_locations(): can't find 'abbreviation' or 'geo_value' to derive state code.")
+    }
+  } else {
+    df <- dplyr::mutate(df, abbreviation = toupper(.data$abbreviation))
+  }
+
+  # Join package loc_data if available
+  if (!is.null(loc_data) && all(c("abbreviation","location","location_name") %in% names(loc_data))) {
+    df <- dplyr::left_join(
+      df,
+      dplyr::select(loc_data, abbreviation, location, location_name),
+      by = "abbreviation"
+    )
+  }
+
+  # Guarantee placeholder columns exist 
+  if (!"location_name" %in% names(df)) df <- dplyr::mutate(df, location_name = NA_character_)
+  if (!"location"      %in% names(df)) df <- dplyr::mutate(df, location      = NA_character_)
+
+  # Fallback lookup from params
+  loc_lookup <- tibble::tibble(
+    abbreviation        = toupper(geo_ids),
+    location_param      = toupper(geo_ids),
+    location_name_param = state_names
+  )
+
+  df <- df %>%
+    dplyr::left_join(loc_lookup, by = "abbreviation") %>%
+    dplyr::mutate(
+      location_name = dplyr::coalesce(.data$location_name, .data$location_name_param, .data$abbreviation),
+      location      = dplyr::coalesce(.data$location,      .data$location_param,      .data$abbreviation)
+    ) %>%
+    dplyr::select(-dplyr::any_of(c("location_name_param","location_param")))
+
+  df
+}
+
+```
+
+
+```{r pull-nhsn, include=FALSE}
+
+pull_one_nhsn <- function(disease, geo_id) {
+  res <- tryCatch(
+    AMPHForecastSuite::get_nhsn_data(
+      disease = disease,
+      geo_values = tolower(geo_id),
+      forecast_date = forecast_date,
+      save_data = FALSE
+    ),
+    error = function(e) {
+      message(sprintf(
+        "get_nhsn_data() failed for disease=%s, geo=%s: %s",
+        disease, geo_id, conditionMessage(e)
+      ))
+      tibble::tibble()  # return empty tibble 
+    }
+  )
+
+  # Ensure tibble and ensure disease column exists
+  res <- tibble::as_tibble(res)
+  if (!"disease" %in% names(res)) res <- dplyr::mutate(res, disease = disease)
+  res
+}
+
+
+
+.param <- tidyr::expand_grid(disease = forecast_diseases, geo = geo_ids)
+
+nhsn <- purrr::map2_dfr(.param$disease, .param$geo, pull_one_nhsn) %>%
+  janitor::clean_names()
+
+
+# Standardize common fields if needed (align to hubverse style)
+
+if (!"target_end_date" %in% names(nhsn) && "time_value" %in% names(nhsn)) {
+  nhsn <- nhsn %>% mutate(target_end_date = as.Date(time_value) + 6)
+}
+if (!"observation" %in% names(nhsn) && "value" %in% names(nhsn)) {
+  nhsn <- nhsn %>% mutate(observation = value)
+}
+if (!"geo_value" %in% names(nhsn) && "abbreviation" %in% names(nhsn)) {
+  nhsn <- nhsn %>% mutate(geo_value = tolower(abbreviation))
+}
+
+# Attach location names
+
+if (exists("loc_data")) {
+  nhsn <- nhsn %>%
+    dplyr::left_join(
+      loc_data %>% dplyr::select(abbreviation, location, location_name),
+      by = "abbreviation"
+    )
+}
+
+ld <- get0("loc_data",
+           ifnotfound = NULL)
+
+nhsn <- ensure_locations(nhsn,
+                         geo_ids = geo_ids,
+                         state_names = state_names,
+                         loc_data = ld)
+
+```
+
+
+```{r pull-nssp, include=FALSE}
+
+nssp_signal_map <- list(
+  "influenza" = "pct_ed_visits_influenza",
+  "covid" = "pct_ed_visits_covid",
+  "rsv" = "pct_ed_visits_rsv"
+)
+
+pull_nssp <- function(disease, geo_id) {
+  sig <- nssp_signal_map[[disease]]
+  res <- tryCatch(
+    epidatr::pub_covidcast(
+      source     = "nssp",
+      signals    = sig,
+      geo_type   = "state",
+      time_type  = "week",
+      geo_values = tolower(geo_id)
+    ),
+    error = function(e) {
+      message(sprintf("NSSP pull failed for %s/%s: %s", disease, geo_id, conditionMessage(e)))
+      tibble::tibble()
+    }
+  )
+  res <- tibble::as_tibble(res)
+  if (!"disease" %in% names(res)) res <- dplyr::mutate(res, disease = disease)
+  res
+}
+
+.param_nssp <- tidyr::expand_grid(disease = forecast_diseases, geo = geo_ids)
+
+nssp <- purrr::map2_dfr(.param_nssp$disease, .param_nssp$geo, pull_nssp) %>%
+  janitor::clean_names()
+
+
+# Standardize fields for downstream use
+nssp <- nssp %>%
+  dplyr::mutate(
+    abbreviation = toupper(geo_value),
+    week_end = as.Date(time_value),
+    ed_pct = value,
+    disease = tolower(disease)
+  )
+
+# Join location names from package loc_data
+if (exists("loc_data")) {
+  nssp <- nssp %>%
+    dplyr::left_join(
+      loc_data %>% dplyr::select(abbreviation, location, location_name),
+      by = "abbreviation"
+    )
+}
+
+nssp <- ensure_locations(nssp,
+                         geo_ids = geo_ids,
+                         state_names = state_names,
+                         loc_data = ld)
+
+```
+
+
+```{r timeseries-plot, echo=FALSE, warning=FALSE}
+
+okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
+
+ggplot(nhsn %>% group_by(geo_value, disease) %>%
+         filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
+         ungroup(),
+       aes(x = target_end_date, y = observation, color = toupper(disease))) +
+  geom_line() +
+  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 3) +
+  scale_color_manual(values = okabe_ito,
+                     name = "Disease") +
+  labs(title = "Total State-level Hospital Admissions, per Disease",
+       x = NULL, y = "Weekly hospital admissions") +
+  theme_bw() +
+    theme_bw(base_size = 16) +
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+
+ggplot(nssp %>% group_by(abbreviation, disease) %>%
+         filter(week_end >= (max(week_end) - weeks(weeks_back))) %>%
+         ungroup(),
+       aes(x = week_end, y = ed_pct, color = toupper(disease))) +
+  geom_line() +
+  facet_wrap(~ abbreviation, scales = "fixed", ncol = 3) +
+  scale_color_manual(values = okabe_ito,
+                     name = "Disease") +
+  labs(title = "Percent of all Emergency Department Visits due to Each Disease, State-Level",
+       x = NULL, y = "Percent of ED visits") +
+  theme_bw() +
+    theme_bw(base_size = 16) +
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+
+
+```
+
+
+
+```{r table, echo=FALSE, warning=FALSE}
+
+kpi_hosp <- nhsn %>%
+  group_by(abbreviation, location_name, disease) %>%
+  slice_max(order_by = target_end_date, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  transmute(
+    State   = abbreviation,
+    `Location Name` = location_name,
+    Virus   = toupper(disease),
+    `Hosp Week End` = as.character(target_end_date),
+    `Latest Hosp Admissions (wk)` = ifelse(is.na(observation), NA, scales::comma(round(observation)))
+  )
+
+kpi_ed <- nssp %>%
+  group_by(abbreviation, location_name, disease) %>%
+  slice_max(order_by = week_end, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  transmute(
+    State   = abbreviation,
+    `Location Name` = location_name,
+    Virus   = toupper(disease),
+    `ED Week End`   = as.character(week_end),
+    `Latest ED % of visits` = ifelse(is.na(ed_pct), NA, scales::percent(ed_pct/100, accuracy = 0.1))
+  )
+
+kpi <- full_join(kpi_hosp, kpi_ed, by = c("State","Location Name","Virus")) %>%
+  arrange(State, Virus)
+
+gt::gt(kpi) %>%
+  gt::fmt_missing(everything(), missing_text = "—") %>%
+  gt::tab_header(
+    title = md("**Current Situation (latest available week)**"),
+    subtitle = md(paste0("Forecast (Sunday) reference date: **", forecast_date, "**"))
+  )
+
+
+```
