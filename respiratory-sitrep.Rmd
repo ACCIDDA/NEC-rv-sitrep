@@ -314,8 +314,7 @@ kpi_hosp <- nhsn %>%
   slice_max(order_by = target_end_date, n = 1, with_ties = FALSE) %>%
   ungroup() %>%
   transmute(
-    State   = abbreviation,
-    `Location Name` = location_name,
+    State   = location_name,
     Virus   = toupper(disease),
     `Hosp Week End` = as.character(target_end_date),
     `Latest Hosp Admissions (wk)` = ifelse(is.na(observation), NA, scales::comma(round(observation)))
@@ -326,21 +325,30 @@ kpi_ed <- nssp %>%
   slice_max(order_by = week_end, n = 1, with_ties = FALSE) %>%
   ungroup() %>%
   transmute(
-    State   = abbreviation,
-    `Location Name` = location_name,
+    State   = location_name,
     Virus   = toupper(disease),
     `ED Week End`   = as.character(week_end),
     `Latest ED % of visits` = ifelse(is.na(ed_pct), NA, scales::percent(ed_pct/100, accuracy = 0.1))
   )
 
-kpi <- full_join(kpi_hosp, kpi_ed, by = c("State","Location Name","Virus")) %>%
+# NHSN and NSSP latest available week ending dates
+hosp_week_end <- unique(kpi_hosp$`Hosp Week End`)
+  ed_week_end <- unique(kpi_ed$`ED Week End`)
+
+kpi <- full_join(kpi_hosp, kpi_ed, by = c("State","Virus")) %>%
   arrange(State, Virus)
 
 gt::gt(kpi) %>%
   gt::fmt_missing(everything(), missing_text = "—") %>%
   gt::tab_header(
     title = md("**Current Situation (latest available week)**"),
-    subtitle = md(paste0("Forecast (Sunday) reference date: **", forecast_date, "**"))
+    subtitle = md(paste0("Forecast (Sunday) reference date: **", forecast_date, "**")),
+  ) %>%
+  gt::cols_hide(
+    columns = c('Hosp Week End','ED Week End')
+) %>%
+  gt::tab_footnote(
+    footnote = md(paste0("Latest available hospitalization data from: ", hosp_week_end, ";  ", "latest available ED data from: ", ed_week_end))
   )
 
 
