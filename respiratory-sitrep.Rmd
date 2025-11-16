@@ -252,7 +252,6 @@ nssp <- ensure_locations(nssp,
                          geo_ids = geo_ids,
                          state_names = state_names,
                          loc_data = ld)
-
 ```
 
 
@@ -265,6 +264,7 @@ ggplot(nhsn %>% group_by(geo_value, disease) %>%
          ungroup(),
        aes(x = target_end_date, y = observation, color = toupper(disease))) +
   geom_line() +
+  geom_vline(xintercept = nhsn$issue_date, linetype = "dotdash") +
   facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 3) +
   scale_color_manual(values = okabe_ito,
                      name = "Disease") +
@@ -286,6 +286,7 @@ ggplot(nssp %>% group_by(abbreviation, disease) %>%
          ungroup(),
        aes(x = week_end, y = ed_pct, color = toupper(disease))) +
   geom_line() +
+    geom_vline(xintercept = nssp$issue, linetype = "dotdash") +
   facet_wrap(~ abbreviation, scales = "fixed", ncol = 3) +
   scale_color_manual(values = okabe_ito,
                      name = "Disease") +
