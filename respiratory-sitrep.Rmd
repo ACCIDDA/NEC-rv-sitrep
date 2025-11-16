@@ -269,7 +269,7 @@ ggplot(nhsn %>% group_by(geo_value, disease) %>%
   scale_color_manual(values = okabe_ito,
                      name = "Disease") +
   labs(title = "Total State-level Hospital Admissions, per Disease",
-       x = NULL, y = "Weekly hospital admissions") +
+       x = NULL, y = "Weekly hospital admissions", caption = "Data source: National Healthcare Safety Network (NHSN) data details") +
   theme_bw() +
     theme_bw(base_size = 16) +
   theme(
@@ -291,7 +291,7 @@ ggplot(nssp %>% group_by(abbreviation, disease) %>%
   scale_color_manual(values = okabe_ito,
                      name = "Disease") +
   labs(title = "Percent of all Emergency Department Visits due to Each Disease, State-Level",
-       x = NULL, y = "Percent of ED visits") +
+       x = NULL, y = "Percent of ED visits", caption = "Data source: National Syndromic Surveillance Program (NSSP) data details") +
   theme_bw() +
     theme_bw(base_size = 16) +
   theme(
