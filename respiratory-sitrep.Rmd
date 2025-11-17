@@ -1,7 +1,6 @@
 
 ---
 title: "Respiratory Virus Situation Report (AZ, NM, UT)"
-subtitle: "NHSN hospital admissions + NSSP ED visits (Flu, COVID-19, RSV)"
 output:
   html_document:
     toc: true
@@ -14,6 +13,37 @@ params:
   weeks_back: 12
 ---
 
+#### **COVID-19**
+  - The **National** epidemic trend is **not changing**.
+    - The weekly percentage of ED visits diagnosed with COVID-19 is **very low**.
+    - Probability epidemic is growing: **56.23%** (not changing).
+  - **Utah:** The epidemic trend is **not estimated**.
+    - The weekly percentage of ED visits diagnosed with COVID-19 is **very low**. 
+    - Probability epidemic is growing: **NA%** (not estimated).
+  - **Arizona:** The epidemic trend is **not changing**.
+    - The weekly percentage of ED visits diagnosed with COVID-19 is **very low**.
+    - Probability epidemic is growing: **57.03%** (not changing).
+  - **New Mexico:** The epidemic trend is **growing**.
+    - The weekly percentage of ED visits diagnosed with COVID-19 is **very low**. 
+    - Probability epidemic is growing: **95.93%** (growing).
+
+#### **Influenza**
+  - The **National** epidemic trend is **growing**.
+    - The weekly percentage of ED visits diagnosed with Influenza is **low**.
+    - Probability epidemic is growing: **99.80%** (growing).
+  - **Utah:** The epidemic trend is **not estimated**.
+    - The weekly percentage of ED visits diagnosed with Influenza is **low**.
+    - Probability epidemic is growing: **NA%** (not estimated).
+  - **Arizona:** The epidemic trend is **growing**.
+    - The weekly percentage of ED visits diagnosed with Influenza is **very low**. 
+    - Probability epidemic is growing: **99.80%** (growing).
+  - **New Mexico:** The epidemic trend is **growing**.
+    - The weekly percentage of ED visits diagnosed with Influenza is **very low**. 
+    - Probability epidemic is growing: **91.45%** (growing).
+
+#### **RSV**
+  - No state-level or national estimates are estimated for RSV this week.
+    - Probability epidemic is growing: **NA%** (not estimated).
 
 ```{r setup, include=FALSE}
 
@@ -354,3 +384,5 @@ gt::gt(kpi) %>%
 
 
 ```
+
+#### This report describes recent state-level trends in respiratory virus activity in Arizona, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on [National Syndromic Surveillance Program (NSSP)](https://www.cdc.gov/nssp/php/about/index.html) data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from [National Healthcare Safety Network (NHSN)]( https://www.cdc.gov/nhsn/about-nhsn/index.html) data and estimate the burden of severe disease and impact on the healthcare system caused by each virus.
