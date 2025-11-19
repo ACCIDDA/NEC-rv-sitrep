@@ -286,22 +286,52 @@ nssp <- ensure_locations(nssp,
 
 
 ```{r timeseries-plot, echo=FALSE, warning=FALSE}
-
 okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
 
-ggplot(nhsn %>% group_by(geo_value, disease) %>%
-         filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
-         ungroup(),
-       aes(x = target_end_date, y = observation, color = toupper(disease))) +
-  geom_line() +
+# Prepare recent/current slices (group-wise) exactly as before
+nhsn_recent <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
+  ungroup()
+
+# Prepare last year's corresponding weeks but extend the previous season end by one month:
+# - start: same (max - weeks_back - 1 year)
+# - end: (max - 1 year + 1 month)  <-- extended one month further than the matching window
+nhsn_last_raw <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(
+    target_end_date >= (max(target_end_date) - weeks(weeks_back) - years(1)) &
+    target_end_date <= (max(target_end_date) - years(1) + months(1))
+  ) %>%
+  ungroup()
+
+# Shift last year's dates forward by 1 year so they overlay on the current x-axis (so the extra month appears past current max)
+nhsn_last_overlay <- nhsn_last_raw %>%
+  mutate(target_end_date = target_end_date + years(1))
+
+# Combine into a single plotting data frame and annotate season
+nhsn_plot_data <- bind_rows(
+  nhsn_recent %>% mutate(season = "Current"),
+  nhsn_last_overlay %>% mutate(season = "Previous season")
+) %>%
+  mutate(disease_label = toupper(disease))
+
+# Plot NHSN with last-year overlay (previous season dashed, alpha = 0.5)
+# Legend: color = Disease, linetype = Season with the requested labels
+ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
+  geom_line(size = 1) +
   geom_vline(xintercept = nhsn$issue_date, linetype = "dotdash") +
   facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 3) +
-  scale_color_manual(values = okabe_ito,
-                     name = "Disease") +
+  scale_color_manual(values = okabe_ito, name = "Disease") +
+  scale_linetype_manual(
+    name = "Season",
+    values = c("Current" = "solid", "Previous season" = "dashed"),
+    labels = c("Current" = "Current season (2025-'26)", "Previous season" = "Previous season (2024-'25)")
+  ) +
+  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
   labs(title = "Total State-level Hospital Admissions, per Disease",
        x = NULL, y = "Weekly hospital admissions", caption = "Data source: National Healthcare Safety Network (NHSN) data details") +
-  theme_bw() +
-    theme_bw(base_size = 16) +
+  theme_bw(base_size = 16) +
   theme(
     strip.text = element_text(size = 18),
     plot.title = element_text(size = 20, face = "bold"),
@@ -311,19 +341,43 @@ ggplot(nhsn %>% group_by(geo_value, disease) %>%
     legend.text = element_text(size = 14)
   )
 
-ggplot(nssp %>% group_by(abbreviation, disease) %>%
-         filter(week_end >= (max(week_end) - weeks(weeks_back))) %>%
-         ungroup(),
-       aes(x = week_end, y = ed_pct, color = toupper(disease))) +
-  geom_line() +
-    geom_vline(xintercept = nssp$issue, linetype = "dotdash") +
+# NSSP: do the same extension for week_end / ed_pct
+nssp_recent <- nssp %>%
+  group_by(abbreviation, disease) %>%
+  filter(week_end >= (max(week_end) - weeks(weeks_back))) %>%
+  ungroup()
+
+nssp_last_raw <- nssp %>%
+  group_by(abbreviation, disease) %>%
+  filter(
+    week_end >= (max(week_end) - weeks(weeks_back) - years(1)) &
+    week_end <= (max(week_end) - years(1) + months(1))
+  ) %>%
+  ungroup()
+
+nssp_last_overlay <- nssp_last_raw %>%
+  mutate(week_end = week_end + years(1))
+
+nssp_plot_data <- bind_rows(
+  nssp_recent %>% mutate(season = "Current"),
+  nssp_last_overlay %>% mutate(season = "Previous season")
+) %>%
+  mutate(disease_label = toupper(disease))
+
+ggplot(nssp_plot_data, aes(x = week_end, y = ed_pct, color = disease_label, linetype = season, alpha = season)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = nssp$issue, linetype = "dotdash") +
   facet_wrap(~ abbreviation, scales = "fixed", ncol = 3) +
-  scale_color_manual(values = okabe_ito,
-                     name = "Disease") +
+  scale_color_manual(values = okabe_ito, name = "Disease") +
+  scale_linetype_manual(
+    name = "Season",
+    values = c("Current" = "solid", "Previous season" = "dashed"),
+    labels = c("Current" = "Current season (2025-'26)", "Previous season" = "Previous season (2024-'25)")
+  ) +
+  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
   labs(title = "Percent of all Emergency Department Visits due to Each Disease, State-Level",
        x = NULL, y = "Percent of ED visits", caption = "Data source: National Syndromic Surveillance Program (NSSP) data details") +
-  theme_bw() +
-    theme_bw(base_size = 16) +
+  theme_bw(base_size = 16) +
   theme(
     strip.text = element_text(size = 18),
     plot.title = element_text(size = 20, face = "bold"),
@@ -332,7 +386,6 @@ ggplot(nssp %>% group_by(abbreviation, disease) %>%
     legend.title = element_text(size = 16),
     legend.text = element_text(size = 14)
   )
-
 
 ```
 
