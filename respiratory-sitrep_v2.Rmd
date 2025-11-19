@@ -1,8 +1,8 @@
 
 ---
-title: "Respiratory Virus Situation Report (AZ, NM, UT)"
+title: "Respiratory Virus Situation Report (AZ, NM, UT) — `r format(Sys.Date(), '%B %d, %Y')`"
 output:
-  pdf_document:
+  html_document:
     toc: true
     toc_depth: 2
     theme: cosmo
@@ -317,6 +317,8 @@ if (length(img_tags) == 0) {
 }
 ```
 
+<br>
+
 ```{r cdc-rt-trend-maps-with-paired-summaries, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 # Paired layout: for each disease emit a single row with a left summary box
 # and the choropleth on the right. Uses the CDC "Epidemic Trends and Rt" dataset.
@@ -328,8 +330,8 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-  "The current COVID epidemic trend is not estimated for Utah, is not changing for Arizona, and is growing for New Mexico. The weekly percentage of ED visits diagnosed with COVID is very low for Utah, Arizona, and New Mexico. Hospital admissions for COVID are currently decreasing in Arizona, increasing in New Mexico, and stable in Utah.",
-  "The current flu epidemic trend is not estimated for Utah, but is growing for Arizona and New Mexico. The weekly percentage of ED visits diagnosed with flu is not estimated for Utah but is very low for Arizona and New Mexico. Hospital admissions for flu are currently stable in Utah and increasing in New Mexico and in Utah.",
+  "The current COVID epidemic trend is not changing for Arizona, is growing for New Mexico, and is not estimated for Utah. The weekly percentage of ED visits diagnosed with COVID is very low for Arizona, New Mexico, and Utah. Hospital admissions for COVID are currently decreasing in Arizona, increasing in New Mexico, and stable in Utah.",
+  "The current flu epidemic trend is growing for Arizona and New Mexico but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu is very low for Arizona and New Mexico but is not currently estimated for Utah. Hospital admissions for flu are currently increasing in Arizona and New Mexico but stable in Utah.",
   "No state-level estimates are currently available for RSV. RSV burden remains low across Arizona, New Mexico, and Utah."
 )
 # --------------------
@@ -436,6 +438,27 @@ normalize_trend <- function(x) {
 # map polygons
 us_map <- map_data("state")
 
+# Helper to get USPS state abbreviations robustly
+get_state_abbrev <- function(x) {
+  sapply(x, function(s) {
+    if (is.na(s) || trimws(as.character(s)) == "") return(NA_character_)
+    s_trim <- trimws(as.character(s))
+    up <- toupper(s_trim)
+    # If already a valid 2-letter postal code, return it
+    if (nchar(up) == 2 && up %in% state.abb) return(up)
+    # Exact full name match (case-insensitive)
+    idx <- match(tolower(s_trim), tolower(state.name), nomatch = 0)
+    if (idx > 0) return(state.abb[idx])
+    # Some inputs might be e.g. "Ariz." or partial; try to find a substring match
+    match_idx <- which(str_detect(tolower(state.name), fixed(tolower(s_trim))))
+    if (length(match_idx) >= 1) return(state.abb[match_idx[1]])
+    # District of Columbia / DC
+    if (tolower(s_trim) %in% c("district of columbia", "dc")) return("DC")
+    # Fallback: return uppercase first two letters (keeps previous behavior for unknowns)
+    toupper(substr(s_trim, 1, 2))
+  }, USE.NAMES = FALSE)
+}
+
 # plotting helper that uses the most recent week for the given disease
 plot_for_disease <- function(keyword, requested_states) {
   # select disease rows (with alias fallback)
@@ -466,94 +489,96 @@ plot_for_disease <- function(keyword, requested_states) {
     df_sub <- tibble(disease_raw = NA_character_, rt_state = requested_states, rt_date = as.Date(NA), trend_raw = NA_character_)
   }
 
-requested <- tibble(rt_state = requested_states)
+  requested <- tibble(rt_state = requested_states)
 
-df_sub2 <- requested %>%
-  left_join(df_sub %>% select(rt_state, rt_date, trend_raw, disease_raw), by = "rt_state") %>%
-  mutate(trend_raw = ifelse(is.na(trend_raw), NA_character_, trend_raw),
-         rt_date = as.Date(rt_date))
+  df_sub2 <- requested %>%
+    left_join(df_sub %>% select(rt_state, rt_date, trend_raw, disease_raw), by = "rt_state") %>%
+    mutate(trend_raw = ifelse(is.na(trend_raw), NA_character_, trend_raw),
+           rt_date = as.Date(rt_date))
 
-df_sub2 <- df_sub2 %>% mutate(trend = normalize_trend(trend_raw))
+  df_sub2 <- df_sub2 %>% mutate(trend = normalize_trend(trend_raw))
 
-# ensure trend factor has full set of desired levels and explicit "Not Estimated" for missing
-df_sub2 <- df_sub2 %>%
-  mutate(trend = as.character(trend)) %>%
-  mutate(trend = ifelse(is.na(trend), "Not Estimated", trend)) %>%
-  mutate(trend = factor(trend, levels = desired_levels, ordered = TRUE))
+  # ensure trend factor has full set of desired levels and explicit "Not Estimated" for missing
+  df_sub2 <- df_sub2 %>%
+    mutate(trend = as.character(trend)) %>%
+    mutate(trend = ifelse(is.na(trend), "Not Estimated", trend)) %>%
+    mutate(trend = factor(trend, levels = desired_levels, ordered = TRUE))
 
-# region mapping for join
-if (all(tolower(df_sub2$rt_state) %in% tolower(state.name))) {
-  df_sub2 <- df_sub2 %>% mutate(region = tolower(rt_state))
-} else if (all(toupper(df_sub2$rt_state) %in% state.abb)) {
-  abbr_to_name <- setNames(tolower(state.name), state.abb)
-  df_sub2 <- df_sub2 %>% mutate(region = abbr_to_name[toupper(rt_state)])
-} else {
-  df_sub2 <- df_sub2 %>% rowwise() %>%
-    mutate(region = {
-      candidate <- tolower(rt_state)
-      if (candidate %in% tolower(state.name)) candidate else {
-        match_idx <- which(str_detect(tolower(state.name), fixed(candidate)))
-        if (length(match_idx) > 0) tolower(state.name[match_idx[1]]) else if (toupper(rt_state) %in% state.abb) tolower(state.name[which(state.abb == toupper(rt_state))[1]]) else NA_character_
-      }
-    }) %>% ungroup()
-}
+  # region mapping for join
+  if (all(tolower(df_sub2$rt_state) %in% tolower(state.name))) {
+    df_sub2 <- df_sub2 %>% mutate(region = tolower(rt_state))
+  } else if (all(toupper(df_sub2$rt_state) %in% state.abb)) {
+    abbr_to_name <- setNames(tolower(state.name), state.abb)
+    df_sub2 <- df_sub2 %>% mutate(region = abbr_to_name[toupper(rt_state)])
+  } else {
+    df_sub2 <- df_sub2 %>% rowwise() %>%
+      mutate(region = {
+        candidate <- tolower(rt_state)
+        if (candidate %in% tolower(state.name)) candidate else {
+          match_idx <- which(str_detect(tolower(state.name), fixed(candidate)))
+          if (length(match_idx) > 0) tolower(state.name[match_idx[1]]) else if (toupper(rt_state) %in% state.abb) tolower(state.name[which(state.abb == toupper(rt_state))[1]]) else NA_character_
+        }
+      }) %>% ungroup()
+  }
 
-map_joined <- us_map %>% left_join(df_sub2 %>% select(region, trend, rt_date, rt_state), by = c("region" = "region"))
+  map_joined <- us_map %>% left_join(df_sub2 %>% select(region, trend, rt_date, rt_state), by = c("region" = "region"))
 
-# ensure trend factor on map_joined has full set of desired levels
-map_joined <- map_joined %>%
-  mutate(trend = as.character(trend)) %>%
-  mutate(trend = ifelse(is.na(trend), "Not Estimated", trend)) %>%
-  mutate(trend = factor(trend, levels = desired_levels, ordered = TRUE))
+  # ensure trend factor on map_joined has full set of desired levels
+  map_joined <- map_joined %>%
+    mutate(trend = as.character(trend)) %>%
+    mutate(trend = ifelse(is.na(trend), "Not Estimated", trend)) %>%
+    mutate(trend = factor(trend, levels = desired_levels, ordered = TRUE))
 
-# dummy data to force all legend levels (positions are arbitrary and placed off-map)
-legend_force_df <- tibble::tibble(
-  .x = seq_len(length(desired_levels)) + 9999,    # far outside map coords
-  .y = seq_len(length(desired_levels)) + 9999,
-  trend = factor(desired_levels, levels = desired_levels, ordered = TRUE)
-)
+  # dummy data to force all legend levels (positions are arbitrary and placed off-map)
+  legend_force_df <- tibble::tibble(
+    .x = seq_len(length(desired_levels)) + 9999,    # far outside map coords
+    .y = seq_len(length(desired_levels)) + 9999,
+    trend = factor(desired_levels, levels = desired_levels, ordered = TRUE)
+  )
 
-# bounding box & centroids
-regions_to_keep <- tolower(requested_states)
-bbox_df <- map_joined %>% filter(region %in% regions_to_keep)
-centroids <- map_joined %>%
-  group_by(region) %>%
-  summarize(long = mean(range(long)), lat = mean(range(lat)),
-            trend = first(trend), rt_state = first(rt_state), .groups = "drop")
+  # bounding box & centroids
+  regions_to_keep <- tolower(requested_states)
+  bbox_df <- map_joined %>% filter(region %in% regions_to_keep)
+  centroids <- map_joined %>%
+    group_by(region) %>%
+    summarize(long = mean(range(long)), lat = mean(range(lat)),
+              trend = first(trend), rt_state = first(rt_state), .groups = "drop") %>%
+    # add USPS abbreviation column using the robust helper
+    mutate(state_abbr = get_state_abbrev(rt_state))
 
-trend_colors <- c("Growing" = "#d73027", "Likely Growing" = "#fc8d59", "Not Changing" = "#ffffbf",
-                  "Likely Declining" = "#91cf60", "Declining" = "#1a9850", "Not Estimated" = "#d9d9d9")
+  trend_colors <- c("Growing" = "#d73027", "Likely Growing" = "#fc8d59", "Not Changing" = "#ffffbf",
+                    "Likely Declining" = "#91cf60", "Declining" = "#1a9850", "Not Estimated" = "#d9d9d9")
 
-p <- ggplot() +
-  geom_polygon(data = us_map %>% filter(!region %in% unique(map_joined$region)),
-               aes(x = long, y = lat, group = group),
-               fill = "grey95", color = "white", size = 0.2) +
-  geom_polygon(data = map_joined,
-               aes(x = long, y = lat, group = group, fill = trend),
-               color = "grey40", size = 0.25) +
-  # invisible dummy points placed far off the map so they never show; show.legend = TRUE so they create legend keys
-  geom_point(data = legend_force_df,
-             aes(x = .x, y = .y, fill = trend),
-             shape = 21, size = 6, color = NA, alpha = 0, show.legend = TRUE) +
-  geom_text(data = centroids %>% filter(region %in% regions_to_keep),
-            aes(x = long, y = lat, label = toupper(substr(rt_state,1,2))),
-            size = 4, fontface = "bold") +
-  scale_fill_manual(values = trend_colors,
-                    limits = desired_levels,
-                    breaks = desired_levels,
-                    drop = FALSE,
-                    na.value = trend_colors["Not Estimated"],
-                    name = "Epidemic Trends") +
-  # override.aes restores visible filled-square legend keys (alpha=1 here so keys are not transparent)
-  guides(fill = guide_legend(override.aes = list(shape = 22, size = 6, colour = "grey40", alpha = 1), ncol = 1)) +
-  coord_quickmap(xlim = range(bbox_df$long, na.rm = TRUE) + c(-1.2, 1.2),
-                 ylim = range(bbox_df$lat, na.rm = TRUE) + c(-1.0, 1.0)) +
-  theme_minimal(base_size = 14) +
-  labs(title = toupper(keyword),
-       subtitle = paste0("Selected states: ", paste(requested_states, collapse = ", "),
-                         " | Latest dataset date: ", ifelse(is.na(latest_date), "Not available", format(latest_date, "%Y-%m-%d"))),
-       caption = "Source: CDC 'Epidemic Trends and Rt' (data.cdc.gov, dataset 5dqz-y4ea)") +
-  theme(axis.title = element_blank(), axis.text = element_blank(), panel.grid = element_blank(), legend.position = "right")
+  p <- ggplot() +
+    geom_polygon(data = us_map %>% filter(!region %in% unique(map_joined$region)),
+                 aes(x = long, y = lat, group = group),
+                 fill = "grey95", color = "white", size = 0.2) +
+    geom_polygon(data = map_joined,
+                 aes(x = long, y = lat, group = group, fill = trend),
+                 color = "grey40", size = 0.25) +
+    # invisible dummy points placed far off the map so they never show; show.legend = TRUE so they create legend keys
+    geom_point(data = legend_force_df,
+               aes(x = .x, y = .y, fill = trend),
+               shape = 21, size = 6, color = NA, alpha = 0, show.legend = TRUE) +
+    geom_text(data = centroids %>% filter(region %in% regions_to_keep),
+              aes(x = long, y = lat, label = state_abbr),
+              size = 4, fontface = "bold") +
+    scale_fill_manual(values = trend_colors,
+                      limits = desired_levels,
+                      breaks = desired_levels,
+                      drop = FALSE,
+                      na.value = trend_colors["Not Estimated"],
+                      name = "Epidemic Trends") +
+    # override.aes restores visible filled-square legend keys (alpha=1 here so keys are not transparent)
+    guides(fill = guide_legend(override.aes = list(shape = 22, size = 6, colour = "grey40", alpha = 1), ncol = 1)) +
+    coord_quickmap(xlim = range(bbox_df$long, na.rm = TRUE) + c(-1.2, 1.2),
+                   ylim = range(bbox_df$lat, na.rm = TRUE) + c(-1.0, 1.0)) +
+    theme_minimal(base_size = 14) +
+    labs(title = toupper(keyword),
+         subtitle = paste0("Selected states: ", paste(requested_states, collapse = ", "),
+                           " | Latest dataset date: ", ifelse(is.na(latest_date), "Not available", format(latest_date, "%Y-%m-%d"))),
+         caption = "Source: CDC 'Epidemic Trends and Rt' (data.cdc.gov, dataset 5dqz-y4ea)") +
+    theme(axis.title = element_blank(), axis.text = element_blank(), panel.grid = element_blank(), legend.position = "right")
 
   p
 }
@@ -704,8 +729,9 @@ nssp <- ensure_locations(nssp,
                          loc_data = ld)
 ```
 
+<br><br><br>
 
-```{r timeseries-plot, echo=FALSE, warning=FALSE}
+```{r timeseries-plot-nssp, echo=FALSE, warning=FALSE}
 okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
 
 
@@ -740,28 +766,31 @@ nssp_plot_data <- bind_rows(
 # Plot NSSP with previous season overlay
 ggplot(nssp_plot_data, aes(x = week_end, y = ed_pct, color = disease_label, linetype = season, alpha = season)) +
   geom_line(size = 1) +
-  geom_vline(xintercept = nssp$issue, linetype = "dotdash") +
+  geom_vline(xintercept = nssp$issue, linetype = "dotted") +
   facet_wrap(~ abbreviation, scales = "fixed", ncol = 3) +
   scale_color_manual(values = okabe_ito, name = "Disease") +
   scale_linetype_manual(
     name = "Season",
-    values = c("Current" = "solid", "Previous season" = "dashed"),
+    values = c("Current" = "solid", "Previous season" = "dotted"),
     labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
   ) +
   scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
   labs(title = "Percent of all Emergency Department Visits due to Each Disease, State-Level",
        x = NULL, y = "Percent of ED visits", caption = "Data source: National Syndromic Surveillance Program (NSSP) data details") +
 theme_bw(base_size = 16) +
-theme(
-  strip.text = element_text(size = 18),
-  plot.title = element_text(size = 20, face = "bold"),
-  axis.title = element_text(size = 16),
-  axis.text = element_text(size = 14),
-  legend.title = element_text(size = 16),
-  legend.text = element_text(size = 14),
-  panel.border = element_rect(color = "black", fill = NA, linewidth = 1)
-)
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+```
 
+<br><br><br>
+
+```{r timeseries-plot-nhsn, echo=FALSE, warning=FALSE}
 
 # Prepare recent/current slices (group-wise) for NHSN
 nhsn_recent <- nhsn %>%
@@ -792,12 +821,12 @@ nhsn_plot_data <- bind_rows(
 # Plot NHSN with previous season overlay
 ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
   geom_line(size = 1) +
-  geom_vline(xintercept = nhsn$issue_date, linetype = "dotdash") +
+  geom_vline(xintercept = nhsn$issue_date, linetype = "dotted") +
   facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 3) +
   scale_color_manual(values = okabe_ito, name = "Disease") +
   scale_linetype_manual(
     name = "Season",
-    values = c("Current" = "solid", "Previous season" = "dashed"),
+    values = c("Current" = "solid", "Previous season" = "dotted"),
     labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
   ) +
   scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
@@ -814,6 +843,8 @@ ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease
   )
 
 ```
+
+<br><br><br>
 
 ```{r table, echo=FALSE, warning=FALSE}
 
@@ -860,6 +891,8 @@ gt::gt(kpi) %>%
   )
 
 ```
+
+<br><br><br>
 
 <div class="summary-box">
   <h3>About this report:</h3>
