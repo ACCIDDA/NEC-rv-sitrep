@@ -292,9 +292,9 @@ ensure_locations <- function(df, geo_ids, state_names, loc_data = NULL) {
 ```{r include-logos, echo=FALSE, results='asis'}
 # Local logo paths (change to relative paths to share/publish the report)
 logo_paths <- c(
-    'C:/Users/milla/OneDrive/Desktop/logos/NEC-logo-1000.jpg',
-    'C:/Users/milla/OneDrive/Desktop/logos/BSPH.logo.rgb_horizontal.blue.png',
-    'C:/Users/milla/OneDrive/Desktop/logos/ACCIDDALogoSmall.png'
+    'logos/NEC-logo-1000.jpg',
+    'logos/BSPH.logo.rgb_horizontal.blue.png',
+    'logos/ACCIDDALogoSmall.png'
 )
 
 # Build <img> tags using data URIs and emit as raw HTML placed at top of page
