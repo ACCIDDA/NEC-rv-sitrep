@@ -56,7 +56,7 @@ library(janitor)
 # Parameters
 state_names <- params$state_names
 geo_ids <- params$geo_ids
-forecast_diseases <- params$disease
+forecast_diseases <- params$diseases
 weeks_back <- params$weeks_back
 
 
@@ -64,6 +64,9 @@ weeks_back <- params$weeks_back
 
 today <- lubridate::today(tzone = "America/Denver")
 forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7))
+
+#temp
+forecast_date <- as.Date("2025-09-27")
 
 # Location reference table from package (if available)
 
@@ -253,6 +256,147 @@ nssp <- ensure_locations(nssp,
                          state_names = state_names,
                          loc_data = ld)
 ```
+
+
+```{r clone-hubs, include=FALSE}
+flu_repo_dir <- clone_hub_repos(disease = "influenza",
+                            clone_dir = getwd())
+
+covid_repo_dir <- clone_hub_repos(disease = "covid",
+                            clone_dir = getwd())
+
+rsv_repo_dir <- clone_hub_repos(disease = "rsv",
+                                old_rsv_repo = FALSE,
+                            clone_dir = getwd())
+```
+
+
+```{r pull-hub-forecasts, include=FALSE}
+
+# Use loc_data (if present) to get hub 'location' codes for the selected states
+ld <- get0("loc_data", ifnotfound = NULL)
+
+if (!is.null(ld)) {
+  state_loc_lookup <- ld %>%
+    dplyr::filter(tolower(abbreviation) %in% tolower(geo_ids)) %>%
+    dplyr::select(abbreviation, location, location_name)
+} else {
+  # Fallback: assume hub files use 2-letter state abbreviations in 'location'
+  state_loc_lookup <- tibble::tibble(
+    abbreviation = toupper(geo_ids),
+    location = toupper(geo_ids),
+    location_name = state_names
+  )
+}
+
+state_location_ids <- unique(state_loc_lookup$location)
+
+# Generic function: read all model files for a given forecast date
+pull_hub_forecasts <- function(repo_dir,
+                               disease,
+                               hub_name,
+                               forecast_date,
+                               loc_ids) {
+
+  model_output_dir <- file.path(repo_dir, "model-output")
+  if (!dir.exists(model_output_dir)) {
+    message("No model-output directory in: ", repo_dir)
+    return(tibble::tibble())
+  }
+
+  model_dirs <- list.dirs(model_output_dir,
+                          recursive = FALSE,
+                          full.names = FALSE)
+
+  purrr::map_dfr(model_dirs, function(m) {
+    file_path <- file.path(
+      model_output_dir,
+      m,
+      sprintf("%s-%s.csv", forecast_date, m)
+    )
+
+    if (!file.exists(file_path)) {
+      return(tibble::tibble())
+    }
+
+    df <- readr::read_csv(file_path, show_col_types = FALSE)
+
+    # Standard hub columns: "location", "target", "type", "quantile", "value", etc.
+    df %>%
+      dplyr::filter(
+        .data$location %in% loc_ids,
+        grepl("hosp", .data$target, ignore.case = TRUE)  # keep hospitalization targets
+      ) %>%
+      dplyr::mutate(
+        model   = m,
+        disease = disease,
+        hub     = hub_name,
+        forecast_date = as.Date(forecast_date)
+      )
+  })
+}
+
+# Pull forecasts from each hub repo for the selected forecast_date
+flu_forecasts <- pull_hub_forecasts(
+  repo_dir    = flu_repo_dir,
+  disease     = "influenza",
+  hub_name    = "FluSight",
+  forecast_date = forecast_date,
+  loc_ids     = state_location_ids
+)
+
+covid_forecasts <- pull_hub_forecasts(
+  repo_dir    = covid_repo_dir,
+  disease     = "covid",
+  hub_name    = "COVID-19 Forecast Hub",
+  forecast_date = forecast_date,
+  loc_ids     = state_location_ids
+)
+
+rsv_forecasts <- pull_hub_forecasts(
+  repo_dir    = rsv_repo_dir,
+  disease     = "rsv",
+  hub_name    = "RSV Forecast Hub",
+  forecast_date = forecast_date,
+  loc_ids     = state_location_ids
+)
+
+# Combine and attach location_name / abbreviation using your existing helper
+hub_forecasts <- dplyr::bind_rows(
+  flu_forecasts,
+  covid_forecasts,
+  rsv_forecasts
+)
+
+hub_forecasts <- ensure_locations(
+  hub_forecasts,
+  geo_ids     = geo_ids,
+  state_names = state_names,
+  loc_data    = ld
+)
+
+```
+
+
+
+
+
+# ```{r copy-round, eval=TRUE, message=FALSE}
+# 
+# flu_ens <- c("FluSight-ensemble")
+# covid_ens <- "CovidHub-ensemble"
+# rsv_ens <- "RSVHub-ensemble"
+# 
+# 
+# # copy Forecast Hub forecasts to model-output folder
+# copy_fch_outputs(flu_repo_dir,
+#                  forecast_date,
+#                  models_to_copy = flu_ens)
+# ```
+
+
+
+
 
 
 ```{r timeseries-plot, echo=FALSE, warning=FALSE}
