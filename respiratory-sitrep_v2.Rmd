@@ -1,0 +1,908 @@
+
+---
+title: "Respiratory Virus Situation Report (AZ, NM, UT) — `r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: cosmo
+params:
+  state_names: ["Arizona", "New Mexico", "Utah"]
+  geo_ids: ["az", "nm", "ut"]
+  diseases: ["influenza", "covid", "rsv"]
+  weeks_back: 12
+---
+
+<!-- stronger styles: increases spacing, targets figure wrappers and gt tables, and styles the summary box -->
+<style>
+/* ========= Logo placement & sizing (adjustable) =========
+   Default: logos centered at the very top of the page, above the title.
+   - To shrink logos change --logo-max-height to 80px or 72px.
+   - To move logos to the top-right instead of centered:
+       replace left:50% & transform:translateX(-50%) with right:12px
+       and remove the translateX transform (instructions included).
+   - If logos overlap the title, increase the .container padding-top value below (currently 7.5rem).
+   ======================================================== */
+
+:root {
+  --logo-max-height: 96px;  /* default ~2x larger. change to 80px or 72px if desired */
+  --logo-top-offset: 8px;
+  --page-padding-top: 7.5rem; /* increase if logos overlap title */
+}
+
+/* Top-centered fixed logos above the title (default) */
+.rpt-top-logos {
+  position: absolute;
+  top: var(--logo-top-offset);
+  left: 50%;
+  transform: translateX(-50%);   /* center horizontally */
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 35000;                /* high so it sits above theme chrome */
+  pointer-events: auto;
+  background: rgba(255,255,255,0); /* transparent */
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* If you prefer top-right instead of centered, comment the lines above
+   and uncomment the block below (or replace the left/transform lines with right/none).
+.rpt-top-logos {
+  position: fixed;
+  top: var(--logo-top-offset);
+  right: 12px;
+  transform: none;
+  left: auto;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 35000;
+}
+*/
+
+/* Logo sizing */
+.rpt-top-logos img {
+  max-height: var(--logo-max-height) !important;   /* ~96px by default */
+  height: 90px !important;
+  width: auto !important;
+  display: inline-block !important;
+  max-width: none !important;
+}
+
+/* enlarge NEC (first) */
+.rpt-top-logos img:nth-child(1) { max-height: 128px !important; }
+
+/* shrink ACCIDDA (third) */
+.rpt-top-logos img:nth-child(3) { max-height: 72px !important; }
+
+/* Ensure the page content is pushed down so the title isn't overlaid */
+.container, .main-container, .content {
+  padding-top: var(--page-padding-top) !important;
+}
+
+/* Mobile: flow logos inline under title and shrink them */
+@media (max-width: 700px) {
+  .rpt-top-logos {
+    position: static;
+    transform: none;
+    margin: 0.45rem 0;
+    justify-content: center;
+  }
+  .rpt-top-logos img { max-height: 56px !important; }
+  .container, .main-container, .content { padding-top: 1rem !important; }
+}
+
+/* ========= other page styles (unchanged) ========= */
+
+/* headings */
+body h1, body h2, body h3, body h4 {
+  margin-top: 2.0rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* space above & below horizontal rules */
+hr {
+  margin-top: 2.0rem !important;
+  margin-bottom: 2.5rem !important;
+  border: 0;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+/* R Markdown figure wrappers */
+div.figure, div.plot, .knitr-plot, .figure {
+  margin-top: 2.0rem !important;
+  margin-bottom: 3.0rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* images inside figure containers (ensures gap below images) */
+div.figure img, .knitr-plot img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1.5rem !important;
+}
+
+/* If facets or ggplot wrap inside .plotly or .plot, apply spacing too */
+.plotly, .plot {
+  margin-bottom: 2.5rem !important;
+}
+
+/* GT table wrapper (gt outputs a div.gt_table) */
+div.gt_table, .gt_table, .gt {
+  margin-top: 1.25rem !important;
+  margin-bottom: 1.75rem !important;
+}
+
+/* Summary box styling - high contrast and visible */
+.summary-box, .well.summary-box, .panel.summary-box {
+  border: 2px solid #1f4e79 !important;
+  background: linear-gradient(#fbfeff, #f3f8fc) !important;
+  padding: 1.15rem 1.25rem !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(31,78,121,0.08) !important;
+  margin-bottom: 1.75rem !important;
+}
+
+/* ensure lists inside box are tight but readable */
+.summary-box ul {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+.summary-box li {
+  margin-bottom: 0.45rem;
+  line-height: 1.35;
+}
+
+/* fallback: if bootstrap .well/panel used, boost their padding/spacing */
+.well, .panel {
+  padding: 1rem !important;
+}
+
+/* small screens: preserve spacing but not huge gaps */
+@media (max-width: 700px) {
+  div.figure, .knitr-plot, .plot {
+    margin-bottom: 1.5rem !important;
+  }
+  .summary-box {
+    padding: 0.85rem !important;
+  }
+}
+</style>
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(
+  fig.align = "center",
+  out.width = "100%",
+  fig.retina = 2,
+  fig.width = 12, 
+  fig.height = 6
+)
+
+# Install & load packages 
+
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
+  remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
+}
+
+cran_pkgs <- c(
+  "tidyverse","jsonlite","epidatr","epiprocess","lubridate",
+  "readr","gt","scales","ggplot2","janitor"
+)
+
+to_install <- setdiff(cran_pkgs, rownames(installed.packages()))
+if (length(to_install)) install.packages(to_install, dependencies = TRUE)
+
+library(AMPHForecastSuite)
+library(tidyverse)
+library(jsonlite)
+library(epidatr)
+library(epiprocess)
+library(lubridate)
+library(readr)
+library(gt)
+library(scales)
+library(ggplot2)
+library(janitor)
+
+# Parameters
+state_names <- params$state_names
+geo_ids <- params$geo_ids
+forecast_diseases <- params$disease
+weeks_back <- params$weeks_back
+
+
+# Forecast date (hubverse style) = most recent Sunday, Mountain Time
+
+today <- lubridate::today(tzone = "America/Denver")
+forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7))
+
+# Location reference table from package (if available)
+
+if ("loc_data" %in% data(package = "AMPHForecastSuite")$results[, "Item"]) {
+  data("loc_data", package = "AMPHForecastSuite")
+} else {
+  loc_data <- tibble(abbreviation = toupper(geo_ids),
+                     location = toupper(geo_ids),
+                     location_name = state_names)
+}
+
+```
+
+
+```{r helper-func, include=FALSE}
+
+# Ensure we have abbreviation, location, and location_name
+
+ensure_locations <- function(df, geo_ids, state_names, loc_data = NULL) {
+  df <- tibble::as_tibble(df)
+
+  # Make/standardize abbreviation
+  if (!"abbreviation" %in% names(df)) {
+    if ("geo_value" %in% names(df)) {
+      df <- dplyr::mutate(df, abbreviation = toupper(.data$geo_value))
+    } else {
+      stop("ensure_locations(): can't find 'abbreviation' or 'geo_value' to derive state code.")
+    }
+  } else {
+    df <- dplyr::mutate(df, abbreviation = toupper(.data$abbreviation))
+  }
+
+  # Join package loc_data if available
+  if (!is.null(loc_data) && all(c("abbreviation","location","location_name") %in% names(loc_data))) {
+    df <- dplyr::left_join(
+      df,
+      dplyr::select(loc_data, abbreviation, location, location_name),
+      by = "abbreviation"
+    )
+  }
+
+  # Guarantee placeholder columns exist 
+  if (!"location_name" %in% names(df)) df <- dplyr::mutate(df, location_name = NA_character_)
+  if (!"location"      %in% names(df)) df <- dplyr::mutate(df, location      = NA_character_)
+
+  # Fallback lookup from params
+  loc_lookup <- tibble::tibble(
+    abbreviation        = toupper(geo_ids),
+    location_param      = toupper(geo_ids),
+    location_name_param = state_names
+  )
+
+  df <- df %>%
+    dplyr::left_join(loc_lookup, by = "abbreviation") %>%
+    dplyr::mutate(
+      location_name = dplyr::coalesce(.data$location_name, .data$location_name_param, .data$abbreviation),
+      location      = dplyr::coalesce(.data$location,      .data$location_param,      .data$abbreviation)
+    ) %>%
+    dplyr::select(-dplyr::any_of(c("location_name_param","location_param")))
+
+  df
+}
+
+```
+
+```{r include-logos, echo=FALSE, results='asis'}
+# Local logo paths (change to relative paths to share/publish the report)
+logo_paths <- c(
+    'C:/Users/milla/OneDrive/Desktop/logos/NEC-logo-1000.jpg',
+    'C:/Users/milla/OneDrive/Desktop/logos/BSPH.logo.rgb_horizontal.blue.png',
+    'C:/Users/milla/OneDrive/Desktop/logos/ACCIDDALogoSmall.png'
+)
+
+# Build <img> tags using data URIs and emit as raw HTML placed at top of page
+img_tags <- vapply(logo_paths, FUN.VALUE = "", FUN = function(p) {
+  if (!file.exists(p)) {
+    message("Logo file not found (skipping): ", p)
+    return("")
+  }
+  uri <- knitr::image_uri(p)
+  alt <- tools::file_path_sans_ext(basename(p))
+  sprintf('<img src="%s" alt="%s" />', uri, alt)
+})
+img_tags <- img_tags[nzchar(img_tags)]
+
+if (length(img_tags) == 0) {
+  message("No logos emitted: check file paths.")
+} else {
+  html <- paste0('<div class="rpt-top-logos">', paste(img_tags, collapse = "\n"), '</div>')
+  knitr::asis_output(html)
+}
+```
+
+<br>
+
+```{r cdc-rt-trend-maps-with-paired-summaries, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Paired layout: for each disease emit a single row with a left summary box
+# and the choropleth on the right. Uses the CDC "Epidemic Trends and Rt" dataset.
+
+# --- User config ---
+states_to_show <- c("Arizona", "New Mexico", "Utah")
+# keywords used to match CDC disease names; order must match summary_bullets
+diseases_to_plot <- c("covid", "influenza", "rsv")
+
+# USER-PROVIDED summary bullets (inserted exactly as requested)
+summary_bullets <- c(
+  "The current COVID epidemic trend is not changing for Arizona, is growing for New Mexico, and is not estimated for Utah. The weekly percentage of ED visits diagnosed with COVID is very low for Arizona, New Mexico, and Utah. Hospital admissions for COVID are currently decreasing in Arizona, increasing in New Mexico, and stable in Utah.",
+  "The current flu epidemic trend is growing for Arizona and New Mexico but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu is very low for Arizona and New Mexico but is not currently estimated for Utah. Hospital admissions for flu are currently increasing in Arizona and New Mexico but stable in Utah.",
+  "No state-level estimates are currently available for RSV. RSV burden remains low across Arizona, New Mexico, and Utah."
+)
+# --------------------
+
+# small CSS so each summary box visually matches the plot height and spacing
+cat("<style>
+/* container for a paired row */
+.pair-row { margin-bottom: 14px; }
+
+/* left summary box (one per disease) */
+.summary-item {
+  border: 1px solid #cfe6ff;
+  background: linear-gradient(180deg,#ffffff,#f4fbff);
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(31,119,180,0.04);
+  min-height: 360px;            /* approximate height to match map */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* heading inside summary box */
+.summary-item h4 {
+  margin: 0 0 0.35rem 0;
+  font-size: 0rem;
+  color: #0f3b61;
+}
+
+/* body text */
+.summary-item p {
+  margin: 0;
+  font-size: 1.65rem;
+  line-height: 1.45;
+}
+
+/* right plot wrapper adds padding so text and plot don't touch */
+.plot-wrap {
+  padding-left: 12px;
+  padding-bottom: 8px;
+}
+
+/* responsive: reduce box height on small screens so stacking looks better */
+@media (max-width: 767px) {
+  .summary-item { min-height: 120px; margin-bottom: 10px; }
+}
+</style>", sep = "")
+
+# --- Download & prepare CDC dataset ---
+cdc_csv_url <- "https://data.cdc.gov/api/views/5dqz-y4ea/rows.csv?accessType=DOWNLOAD"
+rt_raw <- read_csv(cdc_csv_url, col_types = cols(.default = "c"))
+
+# detect the most likely date column name
+possible_date_names <- c("week_end", "week_ending", "week_end_date", "week", "week_end_dt",
+                         "date", "as_of", "issue_date", "report_date", "time_value")
+date_col <- NULL
+for (p in possible_date_names) {
+  m <- grep(p, tolower(names(rt_raw)), value = TRUE)
+  if (length(m) > 0) { date_col <- m[1]; break }
+}
+if (is.null(date_col)) stop("Could not detect date column. Run names(rt_raw) to inspect columns.")
+
+# parse dates robustly
+rt_raw[[date_col]] <- parse_date_time(rt_raw[[date_col]],
+                                      orders = c("Y-m-d", "m/d/Y", "Ymd", "m/d/Y HMS", "Y-m-d HMS"),
+                                      exact = FALSE)
+rt_raw[[date_col]] <- as.Date(rt_raw[[date_col]])
+
+# detect state / disease / trend columns
+state_col <- names(rt_raw)[which(grepl("^state$|location|geo|jurisdiction", tolower(names(rt_raw))))][1]
+disease_col_candidates <- names(rt_raw)[which(grepl("disease|virus|pathogen|syndrom", tolower(names(rt_raw))))]
+disease_col <- if (length(disease_col_candidates) > 0) disease_col_candidates[1] else NA_character_
+trend_col_candidates <- names(rt_raw)[which(grepl("trend|category|status|epidemic", tolower(names(rt_raw))))]
+trend_col <- if (length(trend_col_candidates) > 0) trend_col_candidates[1] else NA_character_
+
+if (is.na(state_col) || is.null(state_col)) stop("Could not detect state column. Run names(rt_raw).")
+
+# normalize columns
+rt_df <- rt_raw %>%
+  rename(rt_date = !!sym(date_col),
+         rt_state = !!sym(state_col)) %>%
+  mutate(disease_raw = if (!is.na(disease_col)) .data[[disease_col]] else NA_character_,
+         trend_raw   = if (!is.na(trend_col))  .data[[trend_col]]  else NA_character_)
+
+# helper: canonical levels and normalizer
+desired_levels <- c("Growing","Likely Growing","Not Changing","Likely Declining","Declining","Not Estimated")
+normalize_trend <- function(x) {
+  x <- tolower(trimws(as.character(x)))
+  x[x %in% c("","na","n/a","not estimated","not_estimated","not available","<na>")] <- NA_character_
+  res <- sapply(x, function(xx) {
+    if (is.na(xx) || xx=="") return("Not Estimated")
+    if (str_detect(xx,"likely") && str_detect(xx,"grow")) return("Likely Growing")
+    if (str_detect(xx,"grow") && !str_detect(xx,"likely")) return("Growing")
+    if (str_detect(xx,"likely") && str_detect(xx,"declin|down")) return("Likely Declining")
+    if (str_detect(xx,"declin|down") && !str_detect(xx,"likely")) return("Declining")
+    if (str_detect(xx,"not chang|no change|stable|steady|unchanged|flat")) return("Not Changing")
+    if (xx %in% tolower(desired_levels)) return(str_to_title(xx))
+    return("Not Estimated")
+  }, USE.NAMES = FALSE)
+  factor(res, levels = desired_levels, ordered = TRUE)
+}
+
+# map polygons
+us_map <- map_data("state")
+
+# Helper to get USPS state abbreviations robustly
+get_state_abbrev <- function(x) {
+  sapply(x, function(s) {
+    if (is.na(s) || trimws(as.character(s)) == "") return(NA_character_)
+    s_trim <- trimws(as.character(s))
+    up <- toupper(s_trim)
+    # If already a valid 2-letter postal code, return it
+    if (nchar(up) == 2 && up %in% state.abb) return(up)
+    # Exact full name match (case-insensitive)
+    idx <- match(tolower(s_trim), tolower(state.name), nomatch = 0)
+    if (idx > 0) return(state.abb[idx])
+    # Some inputs might be e.g. "Ariz." or partial; try to find a substring match
+    match_idx <- which(str_detect(tolower(state.name), fixed(tolower(s_trim))))
+    if (length(match_idx) >= 1) return(state.abb[match_idx[1]])
+    # District of Columbia / DC
+    if (tolower(s_trim) %in% c("district of columbia", "dc")) return("DC")
+    # Fallback: return uppercase first two letters (keeps previous behavior for unknowns)
+    toupper(substr(s_trim, 1, 2))
+  }, USE.NAMES = FALSE)
+}
+
+# plotting helper that uses the most recent week for the given disease
+plot_for_disease <- function(keyword, requested_states) {
+  # select disease rows (with alias fallback)
+  if (!all(is.na(rt_df$disease_raw))) {
+    disease_rows <- rt_df %>% filter(!is.na(disease_raw) & str_detect(tolower(disease_raw), fixed(tolower(keyword))))
+    if (nrow(disease_rows) == 0) {
+      alias_map <- list(covid = c("covid","sars-cov-2","covid-19","covid19"),
+                        influenza = c("influenza","flu"),
+                        rsv = c("rsv"))
+      aliases <- alias_map[[keyword]]
+      if (!is.null(aliases)) disease_rows <- rt_df %>% filter(!is.na(disease_raw) & sapply(tolower(disease_raw), function(x) any(str_detect(x, paste(aliases, collapse="|")))))
+    }
+  } else {
+    disease_rows <- rt_df
+  }
+
+  # get latest date for this disease across dataset
+  if (nrow(disease_rows) == 0 || all(is.na(disease_rows$rt_date))) {
+    latest_date <- NA
+  } else {
+    latest_date <- max(disease_rows$rt_date, na.rm = TRUE)
+  }
+
+  # take rows for that date; ensure one row per requested state (missing -> NA)
+  if (!is.na(latest_date)) {
+    df_sub <- disease_rows %>% filter(rt_date == latest_date)
+  } else {
+    df_sub <- tibble(disease_raw = NA_character_, rt_state = requested_states, rt_date = as.Date(NA), trend_raw = NA_character_)
+  }
+
+  requested <- tibble(rt_state = requested_states)
+
+  df_sub2 <- requested %>%
+    left_join(df_sub %>% select(rt_state, rt_date, trend_raw, disease_raw), by = "rt_state") %>%
+    mutate(trend_raw = ifelse(is.na(trend_raw), NA_character_, trend_raw),
+           rt_date = as.Date(rt_date))
+
+  df_sub2 <- df_sub2 %>% mutate(trend = normalize_trend(trend_raw))
+
+  # ensure trend factor has full set of desired levels and explicit "Not Estimated" for missing
+  df_sub2 <- df_sub2 %>%
+    mutate(trend = as.character(trend)) %>%
+    mutate(trend = ifelse(is.na(trend), "Not Estimated", trend)) %>%
+    mutate(trend = factor(trend, levels = desired_levels, ordered = TRUE))
+
+  # region mapping for join
+  if (all(tolower(df_sub2$rt_state) %in% tolower(state.name))) {
+    df_sub2 <- df_sub2 %>% mutate(region = tolower(rt_state))
+  } else if (all(toupper(df_sub2$rt_state) %in% state.abb)) {
+    abbr_to_name <- setNames(tolower(state.name), state.abb)
+    df_sub2 <- df_sub2 %>% mutate(region = abbr_to_name[toupper(rt_state)])
+  } else {
+    df_sub2 <- df_sub2 %>% rowwise() %>%
+      mutate(region = {
+        candidate <- tolower(rt_state)
+        if (candidate %in% tolower(state.name)) candidate else {
+          match_idx <- which(str_detect(tolower(state.name), fixed(candidate)))
+          if (length(match_idx) > 0) tolower(state.name[match_idx[1]]) else if (toupper(rt_state) %in% state.abb) tolower(state.name[which(state.abb == toupper(rt_state))[1]]) else NA_character_
+        }
+      }) %>% ungroup()
+  }
+
+  map_joined <- us_map %>% left_join(df_sub2 %>% select(region, trend, rt_date, rt_state), by = c("region" = "region"))
+
+  # ensure trend factor on map_joined has full set of desired levels
+  map_joined <- map_joined %>%
+    mutate(trend = as.character(trend)) %>%
+    mutate(trend = ifelse(is.na(trend), "Not Estimated", trend)) %>%
+    mutate(trend = factor(trend, levels = desired_levels, ordered = TRUE))
+
+  # dummy data to force all legend levels (positions are arbitrary and placed off-map)
+  legend_force_df <- tibble::tibble(
+    .x = seq_len(length(desired_levels)) + 9999,    # far outside map coords
+    .y = seq_len(length(desired_levels)) + 9999,
+    trend = factor(desired_levels, levels = desired_levels, ordered = TRUE)
+  )
+
+  # bounding box & centroids
+  regions_to_keep <- tolower(requested_states)
+  bbox_df <- map_joined %>% filter(region %in% regions_to_keep)
+  centroids <- map_joined %>%
+    group_by(region) %>%
+    summarize(long = mean(range(long)), lat = mean(range(lat)),
+              trend = first(trend), rt_state = first(rt_state), .groups = "drop") %>%
+    # add USPS abbreviation column using the robust helper
+    mutate(state_abbr = get_state_abbrev(rt_state))
+
+  trend_colors <- c("Growing" = "#d73027", "Likely Growing" = "#fc8d59", "Not Changing" = "#ffffbf",
+                    "Likely Declining" = "#91cf60", "Declining" = "#1a9850", "Not Estimated" = "#d9d9d9")
+
+  p <- ggplot() +
+    geom_polygon(data = us_map %>% filter(!region %in% unique(map_joined$region)),
+                 aes(x = long, y = lat, group = group),
+                 fill = "grey95", color = "white", size = 0.2) +
+    geom_polygon(data = map_joined,
+                 aes(x = long, y = lat, group = group, fill = trend),
+                 color = "grey40", size = 0.25) +
+    # invisible dummy points placed far off the map so they never show; show.legend = TRUE so they create legend keys
+    geom_point(data = legend_force_df,
+               aes(x = .x, y = .y, fill = trend),
+               shape = 21, size = 6, color = NA, alpha = 0, show.legend = TRUE) +
+    geom_text(data = centroids %>% filter(region %in% regions_to_keep),
+              aes(x = long, y = lat, label = state_abbr),
+              size = 4, fontface = "bold") +
+    scale_fill_manual(values = trend_colors,
+                      limits = desired_levels,
+                      breaks = desired_levels,
+                      drop = FALSE,
+                      na.value = trend_colors["Not Estimated"],
+                      name = "Epidemic Trends") +
+    # override.aes restores visible filled-square legend keys (alpha=1 here so keys are not transparent)
+    guides(fill = guide_legend(override.aes = list(shape = 22, size = 6, colour = "grey40", alpha = 1), ncol = 1)) +
+    coord_quickmap(xlim = range(bbox_df$long, na.rm = TRUE) + c(-1.2, 1.2),
+                   ylim = range(bbox_df$lat, na.rm = TRUE) + c(-1.0, 1.0)) +
+    theme_minimal(base_size = 14) +
+    labs(title = toupper(keyword),
+         subtitle = paste0("Selected states: ", paste(requested_states, collapse = ", "),
+                           " | Latest dataset date: ", ifelse(is.na(latest_date), "Not available", format(latest_date, "%Y-%m-%d"))),
+         caption = "Source: CDC 'Epidemic Trends and Rt' (data.cdc.gov, dataset 5dqz-y4ea)") +
+    theme(axis.title = element_blank(), axis.text = element_blank(), panel.grid = element_blank(), legend.position = "right")
+
+  p
+}
+
+# Build plots
+plots_list <- lapply(diseases_to_plot, function(k) plot_for_disease(k, states_to_show))
+
+# Emit per-disease paired rows: left small box (summary), right map
+for (i in seq_along(diseases_to_plot)) {
+  cat('<div class="row pair-row">')
+
+  # left column: summary for this disease
+  cat('<div class="col-md-4">')
+  cat(sprintf('<div class="summary-item"><h4>%s</h4><p>%s</p></div>', toupper(diseases_to_plot[i]), summary_bullets[i]))
+  cat('</div>')
+
+  # right column: plot for this disease
+  cat('<div class="col-md-8 plot-wrap">')
+  print(plots_list[[i]])
+  cat('</div>')
+
+  cat('</div>') # close pair row
+}
+
+```
+
+```{r pull-nhsn, include=FALSE}
+
+pull_one_nhsn <- function(disease, geo_id) {
+  res <- tryCatch(
+    AMPHForecastSuite::get_nhsn_data(
+      disease = disease,
+      geo_values = tolower(geo_id),
+      forecast_date = forecast_date,
+      save_data = FALSE
+    ),
+    error = function(e) {
+      message(sprintf(
+        "get_nhsn_data() failed for disease=%s, geo=%s: %s",
+        disease, geo_id, conditionMessage(e)
+      ))
+      tibble::tibble()  # return empty tibble 
+    }
+  )
+
+  # Ensure tibble and ensure disease column exists
+  res <- tibble::as_tibble(res)
+  if (!"disease" %in% names(res)) res <- dplyr::mutate(res, disease = disease)
+  res
+}
+
+
+
+.param <- tidyr::expand_grid(disease = forecast_diseases, geo = geo_ids)
+
+nhsn <- purrr::map2_dfr(.param$disease, .param$geo, pull_one_nhsn) %>%
+  janitor::clean_names()
+
+
+# Standardize common fields if needed (align to hubverse style)
+
+if (!"target_end_date" %in% names(nhsn) && "time_value" %in% names(nhsn)) {
+  nhsn <- nhsn %>% mutate(target_end_date = as.Date(time_value) + 6)
+}
+if (!"observation" %in% names(nhsn) && "value" %in% names(nhsn)) {
+  nhsn <- nhsn %>% mutate(observation = value)
+}
+if (!"geo_value" %in% names(nhsn) && "abbreviation" %in% names(nhsn)) {
+  nhsn <- nhsn %>% mutate(geo_value = tolower(abbreviation))
+}
+
+# Attach location names
+
+if (exists("loc_data")) {
+  nhsn <- nhsn %>%
+    dplyr::left_join(
+      loc_data %>% dplyr::select(abbreviation, location, location_name),
+      by = "abbreviation"
+    )
+}
+
+ld <- get0("loc_data",
+           ifnotfound = NULL)
+
+nhsn <- ensure_locations(nhsn,
+                         geo_ids = geo_ids,
+                         state_names = state_names,
+                         loc_data = ld)
+
+```
+
+
+```{r pull-nssp, include=FALSE}
+
+nssp_signal_map <- list(
+  "influenza" = "pct_ed_visits_influenza",
+  "covid" = "pct_ed_visits_covid",
+  "rsv" = "pct_ed_visits_rsv"
+)
+
+pull_nssp <- function(disease, geo_id) {
+  sig <- nssp_signal_map[[disease]]
+  res <- tryCatch(
+    epidatr::pub_covidcast(
+      source     = "nssp",
+      signals    = sig,
+      geo_type   = "state",
+      time_type  = "week",
+      geo_values = tolower(geo_id)
+    ),
+    error = function(e) {
+      message(sprintf("NSSP pull failed for %s/%s: %s", disease, geo_id, conditionMessage(e)))
+      tibble::tibble()
+    }
+  )
+  res <- tibble::as_tibble(res)
+  if (!"disease" %in% names(res)) res <- dplyr::mutate(res, disease = disease)
+  res
+}
+
+.param_nssp <- tidyr::expand_grid(disease = forecast_diseases, geo = geo_ids)
+
+nssp <- purrr::map2_dfr(.param_nssp$disease, .param_nssp$geo, pull_nssp) %>%
+  janitor::clean_names()
+
+
+# Standardize fields for downstream use
+nssp <- nssp %>%
+  dplyr::mutate(
+    abbreviation = toupper(geo_value),
+    week_end = as.Date(time_value),
+    ed_pct = value,
+    disease = tolower(disease)
+  )
+
+# Join location names from package loc_data
+if (exists("loc_data")) {
+  nssp <- nssp %>%
+    dplyr::left_join(
+      loc_data %>% dplyr::select(abbreviation, location, location_name),
+      by = "abbreviation"
+    )
+}
+
+nssp <- ensure_locations(nssp,
+                         geo_ids = geo_ids,
+                         state_names = state_names,
+                         loc_data = ld)
+```
+
+<br><br><br>
+
+```{r timeseries-plot-nssp, echo=FALSE, warning=FALSE}
+okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
+
+
+# Prepare recent/current slices (group-wise) for NSSP week_end / ed_pct
+nssp_recent <- nssp %>%
+  group_by(abbreviation, disease) %>%
+  filter(week_end >= (max(week_end) - weeks(weeks_back))) %>%
+  ungroup()
+
+# Prepare last year's corresponding weeks but extend the previous season end by one month:
+# - start: same (max - weeks_back - 1 year)
+# - end: (max - 1 year + 1 month)  <-- extended one month further than the matching window
+nssp_last_raw <- nssp %>%
+  group_by(abbreviation, disease) %>%
+  filter(
+    week_end >= (max(week_end) - weeks(weeks_back) - years(1)) &
+    week_end <= (max(week_end) - years(1) + months(1))
+  ) %>%
+  ungroup()
+
+# Shift last year's dates forward by 1 year so they overlay on the current x-axis (so the extra month appears past current max)
+nssp_last_overlay <- nssp_last_raw %>%
+  mutate(week_end = week_end + years(1))
+
+# Combine into a single plotting data frame and annotate season
+nssp_plot_data <- bind_rows(
+  nssp_recent %>% mutate(season = "Current"),
+  nssp_last_overlay %>% mutate(season = "Previous season")
+) %>%
+  mutate(disease_label = toupper(disease))
+
+# Plot NSSP with previous season overlay
+ggplot(nssp_plot_data, aes(x = week_end, y = ed_pct, color = disease_label, linetype = season, alpha = season)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = nssp$issue, linetype = "dotted") +
+  facet_wrap(~ abbreviation, scales = "fixed", ncol = 3) +
+  scale_color_manual(values = okabe_ito, name = "Disease") +
+  scale_linetype_manual(
+    name = "Season",
+    values = c("Current" = "solid", "Previous season" = "dotted"),
+    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
+  ) +
+  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
+  labs(title = "Percent of all Emergency Department Visits due to Each Disease, State-Level",
+       x = NULL, y = "Percent of ED visits", caption = "Data source: National Syndromic Surveillance Program (NSSP) data details") +
+theme_bw(base_size = 16) +
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+```
+
+<br><br><br>
+
+```{r timeseries-plot-nhsn, echo=FALSE, warning=FALSE}
+
+# Prepare recent/current slices (group-wise) for NHSN
+nhsn_recent <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
+  ungroup()
+
+# Prepare last year's corresponding weeks (extend the previous season end by one month) for NHSN
+nhsn_last_raw <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(
+    target_end_date >= (max(target_end_date) - weeks(weeks_back) - years(1)) &
+    target_end_date <= (max(target_end_date) - years(1) + months(1))
+  ) %>%
+  ungroup()
+
+# Shift last year's dates forward by 1 year so they overlay on the current x-axis
+nhsn_last_overlay <- nhsn_last_raw %>%
+  mutate(target_end_date = target_end_date + years(1))
+
+# Combine into a single plotting data frame and annotate season
+nhsn_plot_data <- bind_rows(
+  nhsn_recent %>% mutate(season = "Current"),
+  nhsn_last_overlay %>% mutate(season = "Previous season")
+) %>%
+  mutate(disease_label = toupper(disease))
+
+# Plot NHSN with previous season overlay
+ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = nhsn$issue_date, linetype = "dotted") +
+  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 3) +
+  scale_color_manual(values = okabe_ito, name = "Disease") +
+  scale_linetype_manual(
+    name = "Season",
+    values = c("Current" = "solid", "Previous season" = "dotted"),
+    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
+  ) +
+  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
+  labs(title = "Total State-level Hospital Admissions, per Disease",
+       x = NULL, y = "Weekly hospital admissions", caption = "Data source: National Healthcare Safety Network (NHSN) data details") +
+  theme_bw(base_size = 16) +
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+
+```
+
+<br><br><br>
+
+```{r table, echo=FALSE, warning=FALSE}
+
+kpi_hosp <- nhsn %>%
+  group_by(abbreviation, location_name, disease) %>%
+  slice_max(order_by = target_end_date, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  transmute(
+    State   = location_name,
+    Virus   = toupper(disease),
+    `Hosp Week End` = as.character(target_end_date),
+    `Latest Hosp Admissions (wk)` = ifelse(is.na(observation), NA, scales::comma(round(observation)))
+  )
+
+kpi_ed <- nssp %>%
+  group_by(abbreviation, location_name, disease) %>%
+  slice_max(order_by = week_end, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  transmute(
+    State   = location_name,
+    Virus   = toupper(disease),
+    `ED Week End`   = as.character(week_end),
+    `Latest ED % of visits` = ifelse(is.na(ed_pct), NA, scales::percent(ed_pct/100, accuracy = 0.1))
+  )
+
+# NHSN and NSSP latest available week ending dates
+hosp_week_end <- unique(kpi_hosp$`Hosp Week End`)
+  ed_week_end <- unique(kpi_ed$`ED Week End`)
+
+kpi <- full_join(kpi_hosp, kpi_ed, by = c("State","Virus")) %>%
+  arrange(State, Virus)
+
+gt::gt(kpi) %>%
+  gt::fmt_missing(everything(), missing_text = "—") %>%
+  gt::tab_header(
+    title = md("**Current Situation (latest available week)**"),
+    subtitle = md(paste0("Forecast (Sunday) reference date: **", forecast_date, "**")),
+  ) %>%
+  gt::cols_hide(
+    columns = c('Hosp Week End','ED Week End')
+) %>%
+  gt::tab_footnote(
+    footnote = md(paste0("Latest available hospitalization data from: ", hosp_week_end, ";  ", "latest available ED data from: ", ed_week_end))
+  )
+
+```
+
+<br><br><br>
+
+<div class="summary-box">
+  <h3>About this report:</h3>
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+      This report describes recent state-level trends in respiratory virus activity in Arizona, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on <a href="https://www.cdc.gov/nssp/php/about/index.html">National Syndromic Surveillance Program (NSSP)</a> data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from <a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National Healthcare Safety Network (NHSN)</a> data and estimate the burden of severe disease and impact on the healthcare system caused by each virus. Emergency department visit and hospitalization data from the previous year are also shown for  comparison.
+      <ul>
+        <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive disease dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
+        <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/covidvaxview/index.html">COVIDVaxView</a>, <a href="https://www.cdc.gov/fluvaxview/index.html">FluVaxView</a>, or <a href="https://www.cdc.gov/rsvvaxview/dashboard/index.html">RSVVaxView</a>.</li>
+      </ul>
+    </li>
+  </ul>
+</div>
