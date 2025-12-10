@@ -1,14 +1,14 @@
 
 ---
-title: "Respiratory Virus Situation Report (AZ, NM, UT) — `r format(Sys.Date(), '%B %d, %Y')`"
+title: "Respiratory Virus Situation Report (AZ, CO, NM, UT) — `r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
     toc: true
     toc_depth: 2
     theme: cosmo
 params:
-  state_names: ["Arizona", "New Mexico", "Utah"]
-  geo_ids: ["az", "nm", "ut"]
+  state_names: ["Arizona", "Colorado", "New Mexico", "Utah"]
+  geo_ids: ["az", "co", "nm", "ut"]
   diseases: ["influenza", "covid", "rsv"]
   weeks_back: 12
 ---
@@ -44,7 +44,7 @@ params:
   z-index: 35000;                /* high so it sits above theme chrome */
   pointer-events: auto;
   background: rgba(255,255,255,0); /* transparent */
-  padding: 2px 6px;
+  padding: 6px 12px;
   border-radius: 4px;
 }
 
@@ -75,10 +75,10 @@ params:
 }
 
 /* enlarge NEC (first) */
-.rpt-top-logos img:nth-child(1) { max-height: 128px !important; }
+.rpt-top-logos img:nth-child(1) { max-height: 130px !important; }
 
 /* shrink ACCIDDA (third) */
-.rpt-top-logos img:nth-child(3) { max-height: 72px !important; }
+.rpt-top-logos img:nth-child(3) { max-height: 65px !important; }
 
 /* Ensure the page content is pushed down so the title isn't overlaid */
 .container, .main-container, .content {
@@ -320,19 +320,18 @@ if (length(img_tags) == 0) {
 <br>
 
 ```{r cdc-rt-trend-maps-with-paired-summaries, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-# Paired layout: for each disease emit a single row with a left summary box
-# and the choropleth on the right. Uses the CDC "Epidemic Trends and Rt" dataset.
+# Paired layout: for each disease emit a single row with a left summary box and the choropleth on the right. Uses the CDC "Epidemic Trends and Rt" dataset.
 
 # --- User config ---
-states_to_show <- c("Arizona", "New Mexico", "Utah")
+states_to_show <- c("Arizona", "Colorado", "New Mexico", "Utah")
 # keywords used to match CDC disease names; order must match summary_bullets
 diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-  "The current COVID epidemic trend is not changing for Arizona, is growing for New Mexico, and is not estimated for Utah. The weekly percentage of ED visits diagnosed with COVID is very low for Arizona, New Mexico, and Utah. Hospital admissions for COVID are currently decreasing in Arizona, increasing in New Mexico, and stable in Utah.",
-  "The current flu epidemic trend is growing for Arizona and New Mexico but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu is very low for Arizona and New Mexico but is not currently estimated for Utah. Hospital admissions for flu are currently increasing in Arizona and New Mexico but stable in Utah.",
-  "No state-level estimates are currently available for RSV. RSV burden remains low across Arizona, New Mexico, and Utah."
+  "The current COVID epidemic trend is **declining** for Arizona, is **not changing** for for Colorado or New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona, Colorado and Utah, and **low** for New Mexico.",
+  "The current flu epidemic trend is **not changing** for Arizona and Colorado, **growing** for New Mexico, but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **low** for Arizona, New Mexico and Utah, and **moderate** for Colorado.",
+    "The current RSV epidemic trend is **growing** for Arizona and Colorado, but is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with RSV was **very low** for Arizona, New Mexico and Utah, and **low** for Colorado."
 )
 # --------------------
 
@@ -345,11 +344,11 @@ cat("<style>
 .summary-item {
   border: 1px solid #cfe6ff;
   background: linear-gradient(180deg,#ffffff,#f4fbff);
-  padding: 0.75rem 0.9rem;
+  padding: 0.75rem 0.5rem;
   margin-bottom: 0;
   border-radius: 6px;
   box-shadow: 0 1px 2px rgba(31,119,180,0.04);
-  min-height: 360px;            /* approximate height to match map */
+  min-height: 320px;            /* approximate height to match map */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -365,20 +364,15 @@ cat("<style>
 /* body text */
 .summary-item p {
   margin: 0;
-  font-size: 1.65rem;
+  font-size: 1.5rem;
   line-height: 1.45;
-}
-
-/* right plot wrapper adds padding so text and plot don't touch */
-.plot-wrap {
-  padding-left: 12px;
-  padding-bottom: 8px;
 }
 
 /* responsive: reduce box height on small screens so stacking looks better */
 @media (max-width: 767px) {
   .summary-item { min-height: 120px; margin-bottom: 10px; }
 }
+
 </style>", sep = "")
 
 # --- Download & prepare CDC dataset ---
@@ -767,7 +761,7 @@ nssp_plot_data <- bind_rows(
 ggplot(nssp_plot_data, aes(x = week_end, y = ed_pct, color = disease_label, linetype = season, alpha = season)) +
   geom_line(size = 1) +
   geom_vline(xintercept = nssp$issue, linetype = "dotted") +
-  facet_wrap(~ abbreviation, scales = "fixed", ncol = 3) +
+  facet_wrap(~ abbreviation, scales = "fixed", ncol = 2) +
   scale_color_manual(values = okabe_ito, name = "Disease") +
   scale_linetype_manual(
     name = "Season",
@@ -787,6 +781,16 @@ theme_bw(base_size = 16) +
     legend.text = element_text(size = 14)
   )
 ```
+
+<div class="summary-box">
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+      This figure shows the state-level trends in the impact of respiratory virus activity on emergency department (ED) visits based on National Syndromic Surveillance Program (NSSP) data. The broad coverage of this emergency department sample helps to provide reasonable estimates of how much symptomatic illness each virus is causing in each state. The percentage of visits for each disease out of all ED visits is shown to allow comparability across time and across states despite different overall ED visit volume. Data from the previous season, represented with dotted lines, also shown for comparison.
+      <ul>
+      </ul>
+    </li>
+  </ul>
+</div>
 
 <br><br><br>
 
@@ -822,7 +826,7 @@ nhsn_plot_data <- bind_rows(
 ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
   geom_line(size = 1) +
   geom_vline(xintercept = nhsn$issue_date, linetype = "dotted") +
-  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 3) +
+  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 2) +
   scale_color_manual(values = okabe_ito, name = "Disease") +
   scale_linetype_manual(
     name = "Season",
@@ -843,6 +847,16 @@ ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease
   )
 
 ```
+
+<div class="summary-box">
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+      This figure shows trends in hospitalizations based on data from the National Healthcare Safety Network (NHSN). Total number of weekly hospital admissions per disease are reported, and each state sub-chart has a different Y-axis scale. Hospitalizations represent an estimate of the burden of severe disease and impact on the on healthcare system for each virus. Data from the previous season, represented with dotted lines, also shown for comparison.
+      <ul>
+      </ul>
+    </li>
+  </ul>
+</div>
 
 <br><br><br>
 
@@ -874,7 +888,7 @@ kpi_ed <- nssp %>%
 hosp_week_end <- unique(kpi_hosp$`Hosp Week End`)
   ed_week_end <- unique(kpi_ed$`ED Week End`)
 
-kpi <- full_join(kpi_hosp, kpi_ed, by = c("State","Virus")) %>%
+kpi <- full_join(kpi_ed, kpi_hosp, by = c("State","Virus")) %>%
   arrange(State, Virus)
 
 gt::gt(kpi) %>%
@@ -898,7 +912,7 @@ gt::gt(kpi) %>%
   <h3>About this report:</h3>
   <ul style="list-style-type: none; padding-left: 0;">
     <li>
-      This report describes recent state-level trends in respiratory virus activity in Arizona, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on <a href="https://www.cdc.gov/nssp/php/about/index.html">National Syndromic Surveillance Program (NSSP)</a> data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from <a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National Healthcare Safety Network (NHSN)</a> data and estimate the burden of severe disease and impact on the healthcare system caused by each virus. Emergency department visit and hospitalization data from the previous year are also shown for  comparison.
+      This report describes recent state-level trends in respiratory virus activity in Arizona, Colorado, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on <a href="https://www.cdc.gov/nssp/php/about/index.html">National Syndromic Surveillance Program (NSSP)</a> data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from <a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National Healthcare Safety Network (NHSN)</a> data and estimate the burden of severe disease and impact on the healthcare system caused by each virus. Emergency department visit and hospitalization data from the previous year are also shown for  comparison.
       <ul>
         <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive disease dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
         <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/covidvaxview/index.html">COVIDVaxView</a>, <a href="https://www.cdc.gov/fluvaxview/index.html">FluVaxView</a>, or <a href="https://www.cdc.gov/rsvvaxview/dashboard/index.html">RSVVaxView</a>.</li>
