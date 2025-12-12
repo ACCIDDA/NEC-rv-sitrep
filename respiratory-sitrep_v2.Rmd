@@ -319,6 +319,7 @@ if (length(img_tags) == 0) {
 
 <br>
 
+
 ```{r cdc-rt-trend-maps-with-paired-summaries, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 # Paired layout: for each disease emit a single row with a left summary box and the choropleth on the right. Uses the CDC "Epidemic Trends and Rt" dataset.
 
@@ -794,6 +795,7 @@ theme_bw(base_size = 16) +
 
 <br><br><br>
 
+
 ```{r timeseries-plot-nhsn, echo=FALSE, warning=FALSE}
 
 # Prepare recent/current slices (group-wise) for NHSN
@@ -915,7 +917,8 @@ gt::gt(kpi) %>%
       This report describes recent state-level trends in respiratory virus activity in Arizona, Colorado, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on <a href="https://www.cdc.gov/nssp/php/about/index.html">National Syndromic Surveillance Program (NSSP)</a> data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from <a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National Healthcare Safety Network (NHSN)</a> data and estimate the burden of severe disease and impact on the healthcare system caused by each virus. Emergency department visit and hospitalization data from the previous year are also shown for  comparison.
       <ul>
         <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive disease dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
-        <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/covidvaxview/index.html">COVIDVaxView</a>, <a href="https://www.cdc.gov/fluvaxview/index.html">FluVaxView</a>, or <a href="https://www.cdc.gov/rsvvaxview/dashboard/index.html">RSVVaxView</a>.</li>
+        <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/respvaxview/about/index.html">RespVaxView</a>.</li>
+        <li>Note: Some current estimates, particularly for emergency department utilization, may still be impacted by holiday reporting effects.<li>
       </ul>
     </li>
   </ul>
