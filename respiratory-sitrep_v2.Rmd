@@ -337,10 +337,13 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-  "The current COVID epidemic trend is **declining** for Arizona, is **not changing** for for Colorado or New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona, Colorado and Utah, and **low** for New Mexico.",
-  "The current flu epidemic trend is **not changing** for Arizona and Colorado, **growing** for New Mexico, but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **low** for Arizona, New Mexico and Utah, and **moderate** for Colorado.",
-    "The current RSV epidemic trend is **growing** for Arizona and Colorado, but is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with RSV was **very low** for Arizona, New Mexico and Utah, and **low** for Colorado."
+    "The current COVID epidemic trend (based on data reported through 12/09/2025) is **declining** for Arizona, **likely growing** for Colorado, **not changing** for New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona and Utah, and **low** for Colorado and New Mexico.",
+  
+  "The current flu epidemic trend (based on data reported through 12/09/2025) is **likely growing** for Arizona, **growing** for Colorado and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **low** for Arizona, New Mexico and Utah, and **moderate** for Colorado.",
+  
+    "The current RSV epidemic trend  (based on data reported through 12/09/2025) is **growing** for Arizona, Colorado and New Mexico, but is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with RSV was **very low** for Arizona, New Mexico and Utah, and **low** for Colorado."
 )
+
 # --------------------
 
 # small CSS so each summary box visually matches the plot height and spacing
@@ -945,7 +948,7 @@ ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease
     linewidth = 1,
     linetype = "longdash"
   ) +
-  geom_vline(xintercept = nhsn$issue_date, linetype = "dotted") +
+  geom_vline(xintercept = today, linetype = "dotted") +
   facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 2) +
   scale_color_manual(values = okabe_ito, name = "Disease") +
   scale_linetype_manual(
@@ -972,7 +975,10 @@ ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease
 <div class="summary-box">
   <ul style="list-style-type: none; padding-left: 0;">
     <li>
-      This figure shows trends in hospitalizations based on data from the National Healthcare Safety Network (NHSN). Total number of weekly hospital admissions per disease are reported, and each state sub-chart has a different Y-axis scale. Hospitalizations represent an estimate of the burden of severe disease and impact on the on healthcare system for each virus. Data from the previous season, represented with dotted lines, also shown for comparison. In addition, we have included the most recent hub ensemble forecasts from each of the corresponding collaborative hubs: FluSight Forecast Hub, COVID-19 Forecast Hub, and RSV Forecast Hub. The hub ensembles are an average of each of the contributed models to the hub, where the dashed lines show the median estimated hospitalizations, and the shaded region indicates the 95% prediction intervals. Hub ensembles tend to be robust, as they incorporate insight from numerous teams and models.
+      This figure shows trends in hospitalizations based on data from the National Healthcare Safety Network (NHSN). Total number of weekly hospital admissions per disease are reported and each state sub-chart has a different Y-axis scale. Hospitalizations represent an estimate of the burden of severe disease and impact on the on healthcare system for each virus. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent.<br>
+      <b>
+      Forecasts: <br>
+      </b> In addition, we have included the most recent hub ensemble forecasts from each of the corresponding collaborative hubs: COVID-19 Forecast Hub, FluSight Forecast Hub, and RSV Forecast Hub. The hub ensembles are an average of each of the contributed models to the hub, where the dashed lines show the median estimated hospitalizations for the upcoming 1-4 weeks, and the shaded region indicates the 95% prediction intervals. Hub ensembles tend to be robust, as they incorporate insight from numerous teams and models.
       <ul>
       </ul>
     </li>
@@ -1014,7 +1020,7 @@ nssp_plot_data <- bind_rows(
 # Plot NSSP with previous season overlay
 ggplot(nssp_plot_data, aes(x = week_end, y = ed_pct, color = disease_label, linetype = season, alpha = season)) +
   geom_line(size = 1) +
-  geom_vline(xintercept = nssp$issue, linetype = "dotted") +
+  geom_vline(xintercept = today, linetype = "dotted") +
   facet_wrap(~ abbreviation, scales = "fixed", ncol = 2) +
   scale_color_manual(values = okabe_ito, name = "Disease") +
   scale_linetype_manual(
@@ -1039,7 +1045,9 @@ theme_bw(base_size = 16) +
 <div class="summary-box">
   <ul style="list-style-type: none; padding-left: 0;">
     <li>
-      This figure shows the state-level trends in the impact of respiratory virus activity on emergency department (ED) visits based on National Syndromic Surveillance Program (NSSP) data. The broad coverage of this emergency department sample helps to provide reasonable estimates of how much symptomatic illness each virus is causing in each state. The percentage of visits for each disease out of all ED visits is shown to allow comparability across time and across states despite different overall ED visit volume. Data from the previous season, represented with dotted lines, also shown for comparison.
+        <p>
+      This figure shows the state-level trends in the impact of respiratory virus activity on emergency department (ED) visits based on National Syndromic Surveillance Program (NSSP) data. The broad coverage of this emergency department sample helps to provide reasonable estimates of how much symptomatic illness each virus is causing in each state. The percentage of visits for each disease out of all ED visits is shown to allow comparability across time and across states despite different overall ED visit volume. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent.
+      </p>
       <ul>
       </ul>
     </li>
@@ -1083,8 +1091,7 @@ kpi <- full_join(kpi_ed, kpi_hosp, by = c("State","Virus")) %>%
 gt::gt(kpi) %>%
   gt::fmt_missing(everything(), missing_text = "—") %>%
   gt::tab_header(
-    title = md("**Current Situation (latest available week)**"),
-    subtitle = md(paste0("Forecast (Sunday) reference date: **", forecast_date, "**")),
+    title = md("**Current Situation (latest available week)**")
   ) %>%
   gt::cols_hide(
     columns = c('Hosp Week End','ED Week End')
@@ -1103,7 +1110,7 @@ gt::gt(kpi) %>%
     <li>
       This report describes recent state-level trends in respiratory virus activity in Arizona, Colorado, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on <a href="https://www.cdc.gov/nssp/php/about/index.html">National Syndromic Surveillance Program (NSSP)</a> data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from <a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National Healthcare Safety Network (NHSN)</a> data and estimate the burden of severe disease and impact on the healthcare system caused by each virus. Emergency department visit and hospitalization data from the previous year are also shown for  comparison.
       <ul>
-        <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive disease dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
+                <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive diseaseexp(-0.) dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
         <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/respvaxview/about/index.html">RespVaxView</a>.</li>
         <li>Note: Some current estimates, particularly for emergency department utilization, may still be impacted by holiday reporting effects.<li>
       </ul>
