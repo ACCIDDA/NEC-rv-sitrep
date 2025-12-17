@@ -195,8 +195,10 @@ if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
 
 cran_pkgs <- c(
   "tidyverse","jsonlite","epidatr","epiprocess","lubridate",
-  "readr","gt","scales","ggplot2","janitor"
+  "readr","gt","scales","ggplot2","janitor","tidyr","stringr","maps"
 )
+
+
 
 to_install <- setdiff(cran_pkgs, rownames(installed.packages()))
 if (length(to_install)) install.packages(to_install, dependencies = TRUE)
@@ -212,18 +214,23 @@ library(gt)
 library(scales)
 library(ggplot2)
 library(janitor)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(maps)
+
 
 # Parameters
 state_names <- params$state_names
 geo_ids <- params$geo_ids
-forecast_diseases <- params$disease
+forecast_diseases <- params$diseases
 weeks_back <- params$weeks_back
 
 
 # Forecast date (hubverse style) = most recent Sunday, Mountain Time
 
 today <- lubridate::today(tzone = "America/Denver")
-forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7))
+forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
 
 # Location reference table from package (if available)
 
@@ -329,12 +336,13 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-  "The current COVID epidemic trend (based on data reported through 12/09/2025) is **declining** for Arizona, **likely growing** for Colorado, **not changing** for New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona and Utah, and **low** for Colorado and New Mexico.",
+    "The current COVID epidemic trend (based on data reported through 12/09/2025) is **declining** for Arizona, **likely growing** for Colorado, **not changing** for New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona and Utah, and **low** for Colorado and New Mexico.",
   
   "The current flu epidemic trend (based on data reported through 12/09/2025) is **likely growing** for Arizona, **growing** for Colorado and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **low** for Arizona, New Mexico and Utah, and **moderate** for Colorado.",
   
     "The current RSV epidemic trend  (based on data reported through 12/09/2025) is **growing** for Arizona, Colorado and New Mexico, but is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with RSV was **very low** for Arizona, New Mexico and Utah, and **low** for Colorado."
 )
+
 # --------------------
 
 # small CSS so each summary box visually matches the plot height and spacing
@@ -724,11 +732,260 @@ nssp <- ensure_locations(nssp,
                          loc_data = ld)
 ```
 
+
+```{r clone-hubs, include=FALSE}
+flu_repo_dir <- clone_hub_repos(disease = "influenza",
+                            clone_dir = getwd())
+covid_repo_dir <- clone_hub_repos(disease = "covid",
+                            clone_dir = getwd())
+rsv_repo_dir <- clone_hub_repos(disease = "rsv",
+                                old_rsv_repo = FALSE,
+                            clone_dir = getwd())
+```
+
+
+```{r pull-hub-forecasts, include=FALSE}
+# Use loc_data (if present) to get hub 'location' codes for the selected states
+ld <- get0("loc_data", ifnotfound = NULL)
+if (!is.null(ld)) {
+  state_loc_lookup <- ld %>%
+    dplyr::filter(tolower(abbreviation) %in% tolower(geo_ids)) %>%
+    dplyr::select(abbreviation, location, location_name)
+} else {
+  # Fallback: assume hub files use 2-letter state abbreviations in 'location'
+  state_loc_lookup <- tibble::tibble(
+    abbreviation = toupper(geo_ids),
+    location = toupper(geo_ids),
+    location_name = state_names
+  )
+}
+state_location_ids <- unique(state_loc_lookup$location)
+# Generic function: read all model files for a given forecast date
+pull_hub_forecasts <- function(repo_dir,
+                               disease,
+                               hub_name,
+                               forecast_date,
+                               loc_ids) {
+  model_output_dir <- file.path(repo_dir, "model-output")
+  if (!dir.exists(model_output_dir)) {
+    message("No model-output directory in: ", repo_dir)
+    return(tibble::tibble())
+  }
+  model_dirs <- list.dirs(model_output_dir,
+                          recursive = FALSE,
+                          full.names = FALSE)
+  purrr::map_dfr(model_dirs, function(m) {
+    file_path <- file.path(
+      model_output_dir,
+      m,
+      sprintf("%s-%s.csv", forecast_date, m)
+    )
+    if (!file.exists(file_path)) {
+      return(tibble::tibble())
+    }
+    df <- readr::read_csv(file_path, 
+                          show_col_types = FALSE,
+                          col_types = readr::cols(
+                            output_type_id = readr::col_character(),
+                            .default = readr::col_guess()
+                          ))
+    # Standard hub columns: "location", "target", "type", "quantile", "value", etc.
+    df %>%
+      dplyr::filter(
+        .data$location %in% loc_ids,
+        grepl("hosp", .data$target, ignore.case = TRUE)  # keep hospitalization targets
+      ) %>%
+      dplyr::mutate(
+        model   = m,
+        disease = disease,
+        hub     = hub_name,
+        forecast_date = as.Date(forecast_date)
+      )
+  })
+}
+
+# Pull forecasts from each hub repo for the selected forecast_date
+flu_forecasts <- pull_hub_forecasts(
+  repo_dir    = flu_repo_dir,
+  disease     = "influenza",
+  hub_name    = "FluSight",
+  forecast_date = forecast_date,
+  loc_ids     = state_location_ids
+) %>%
+  dplyr::filter(model == "FluSight-ensemble")
+
+covid_forecasts <- pull_hub_forecasts(
+  repo_dir    = covid_repo_dir,
+  disease     = "covid",
+  hub_name    = "COVID-19 Forecast Hub",
+  forecast_date = forecast_date,
+  loc_ids     = state_location_ids
+) %>%
+  dplyr::filter(model == "CovidHub-ensemble")
+
+rsv_forecasts <- pull_hub_forecasts(
+  repo_dir    = rsv_repo_dir,
+  disease     = "rsv",
+  hub_name    = "RSV Forecast Hub",
+  forecast_date = forecast_date,
+  loc_ids     = state_location_ids
+) %>%
+  dplyr::filter(model == "RSVHub-ensemble")
+
+```
+
+
+```{r prepare-forecasts, include=FALSE}
+
+# Combine hub ensemble forecasts you already pulled (and filtered to ensemble)
+hub_fc_raw <- bind_rows(flu_forecasts, covid_forecasts, rsv_forecasts) %>%
+  mutate(
+    disease_label = toupper(disease),
+    location = as.character(location)
+  ) %>%
+  left_join(
+    state_loc_lookup %>%
+      transmute(
+        location  = as.character(location),   # hub location (FIPS)
+        geo_value = toupper(abbreviation)      # NHSN geo_value
+      ),
+    by = "location"
+  )
+
+
+# Build target_end_date for plotting (prefer column if it exists; else parse from `target`)
+hub_fc_raw <- hub_fc_raw %>%
+  mutate(
+    target_end_date = dplyr::case_when(
+      "target_end_date" %in% names(.) ~ as.Date(.data$target_end_date),
+      TRUE ~ as.Date(str_extract(.data$target, "\\d{4}-\\d{2}-\\d{2}"))
+    )
+  ) %>%
+  filter(!is.na(.data$target_end_date))
+
+# Keep only quantiles (typical hub format)
+hub_fc_q <- hub_fc_raw %>%
+  filter(.data$output_type == "quantile") %>%
+  mutate(output_type_id = as.numeric(.data$output_type_id))
+
+# Median line
+hub_fc_med <- hub_fc_q %>%
+  filter(output_type_id == 0.5) %>%
+  transmute(
+    geo_value,
+    target_end_date,
+    disease_label,
+    fc_med = value
+  )
+
+# Ribbon interval (edit quantiles if you want 95% etc.)
+hub_fc_pi <- hub_fc_q %>%
+  filter(output_type_id %in% c(0.25, 0.75)) %>%
+  transmute(
+    geo_value,
+    target_end_date,
+    disease_label,
+    output_type_id,
+    value
+  ) %>%
+  tidyr::pivot_wider(names_from =output_type_id, values_from = value) %>%
+  rename(fc_lo = `0.25`, fc_hi = `0.75`)
+
+
+```
+
+
+<br><br><br>
+
+
+```{r timeseries-plot-nhsn, echo=FALSE, warning=FALSE}
+
+okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
+
+# Prepare recent/current slices (group-wise) for NHSN
+nhsn_recent <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
+  ungroup()
+
+# Prepare last year's corresponding weeks (extend the previous season end by one month) for NHSN
+nhsn_last_raw <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(
+    target_end_date >= (max(target_end_date) - weeks(weeks_back) - years(1)) &
+      target_end_date <= (max(target_end_date) - years(1) + months(1))
+  ) %>%
+  ungroup()
+
+# Shift last year's dates forward by 1 year so they overlay on the current x-axis
+nhsn_last_overlay <- nhsn_last_raw %>%
+  mutate(target_end_date = target_end_date + years(1))
+
+# Combine into a single plotting data frame and annotate season
+nhsn_plot_data <- bind_rows(
+  nhsn_recent %>% mutate(season = "Current"),
+  nhsn_last_overlay %>% mutate(season = "Previous season")
+) %>%
+  mutate(disease_label = toupper(disease))
+
+# Plot NHSN with previous season overlay
+ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
+  geom_line(size = 1) +
+  # Forecast interval ribbon (optional)
+  geom_ribbon(
+    data = hub_fc_pi,
+    aes(x = target_end_date, ymin = fc_lo, ymax = fc_hi, fill = disease_label),
+    inherit.aes = FALSE,
+    alpha = 0.15
+  ) +
+  # Forecast median line
+  geom_line(
+    data = hub_fc_med,
+    aes(x = target_end_date, y = fc_med, color = disease_label),
+    inherit.aes = FALSE,
+    linewidth = 1,
+    linetype = "longdash"
+  ) +
+  geom_vline(xintercept = today, linetype = "dotted") +
+  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 2) +
+  scale_color_manual(values = okabe_ito, name = "Disease") +
+  scale_linetype_manual(
+    name = "Season",
+    values = c("Current" = "solid", "Previous season" = "dotted"),
+    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
+  ) +
+  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
+  guides(fill = "none") +
+  labs(title = "Total State-level Hospital Admissions, per Disease \n(with associated hub ensemble forecasts)",
+       x = NULL, y = "Weekly hospital admissions", caption = "Data source: National Healthcare Safety Network (NHSN) data details") +
+  theme_bw(base_size = 16) +
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+
+```
+
+<div class="summary-box">
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+      This figure shows trends in hospitalizations based on data from the National Healthcare Safety Network (NHSN). Total number of weekly hospital admissions per disease are reported and each state sub-chart has a different Y-axis scale. Hospitalizations represent an estimate of the burden of severe disease and impact on the on healthcare system for each virus. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent.<br>
+      <b>
+      Forecasts: <br>
+      </b> In addition, we have included the most recent hub ensemble forecasts from each of the corresponding collaborative hubs: COVID-19 Forecast Hub, FluSight Forecast Hub, and RSV Forecast Hub. The hub ensembles are an average of each of the contributed models to the hub, where the dashed lines show the median estimated hospitalizations for the upcoming 1-4 weeks, and the shaded region indicates the 95% prediction intervals. Hub ensembles tend to be robust, as they incorporate insight from numerous teams and models.
+      <ul>
+      </ul>
+    </li>
+  </ul>
+</div>
+
 <br><br><br>
 
 ```{r timeseries-plot-nssp, echo=FALSE, warning=FALSE}
-okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
-
 
 # Prepare recent/current slices (group-wise) for NSSP week_end / ed_pct
 nssp_recent <- nssp %>%
@@ -784,74 +1041,19 @@ theme_bw(base_size = 16) +
 ```
 
 <div class="summary-box">
-  <p>
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+        <p>
       This figure shows the state-level trends in the impact of respiratory virus activity on emergency department (ED) visits based on National Syndromic Surveillance Program (NSSP) data. The broad coverage of this emergency department sample helps to provide reasonable estimates of how much symptomatic illness each virus is causing in each state. The percentage of visits for each disease out of all ED visits is shown to allow comparability across time and across states despite different overall ED visit volume. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent.
       </p>
+      <ul>
+      </ul>
+    </li>
+  </ul>
 </div>
 
 <br><br><br>
 
-```{r timeseries-plot-nhsn, echo=FALSE, warning=FALSE}
-
-# Prepare recent/current slices (group-wise) for NHSN
-nhsn_recent <- nhsn %>%
-  group_by(geo_value, disease) %>%
-  filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
-  ungroup()
-
-# Prepare last year's corresponding weeks (extend the previous season end by one month) for NHSN
-nhsn_last_raw <- nhsn %>%
-  group_by(geo_value, disease) %>%
-  filter(
-    target_end_date >= (max(target_end_date) - weeks(weeks_back) - years(1)) &
-    target_end_date <= (max(target_end_date) - years(1) + months(1))
-  ) %>%
-  ungroup()
-
-# Shift last year's dates forward by 1 year so they overlay on the current x-axis
-nhsn_last_overlay <- nhsn_last_raw %>%
-  mutate(target_end_date = target_end_date + years(1))
-
-# Combine into a single plotting data frame and annotate season
-nhsn_plot_data <- bind_rows(
-  nhsn_recent %>% mutate(season = "Current"),
-  nhsn_last_overlay %>% mutate(season = "Previous season")
-) %>%
-  mutate(disease_label = toupper(disease))
-
-# Plot NHSN with previous season overlay
-ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
-  geom_line(size = 1) +
-  geom_vline(xintercept = today, linetype = "dotted") +
-  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 2) +
-  scale_color_manual(values = okabe_ito, name = "Disease") +
-  scale_linetype_manual(
-    name = "Season",
-    values = c("Current" = "solid", "Previous season" = "dotted"),
-    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
-  ) +
-  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
-  labs(title = "Total State-level Hospital Admissions, per Disease",
-       x = NULL, y = "Weekly hospital admissions", caption = "Data source: National Healthcare Safety Network (NHSN) data details") +
-  theme_bw(base_size = 16) +
-  theme(
-    strip.text = element_text(size = 18),
-    plot.title = element_text(size = 20, face = "bold"),
-    axis.title = element_text(size = 16),
-    axis.text = element_text(size = 14),
-    legend.title = element_text(size = 16),
-    legend.text = element_text(size = 14)
-  )
-
-```
-
-<div class="summary-box">
-  <p>
-      This figure shows trends in hospitalizations based on data from the National Healthcare Safety Network (NHSN). Total number of weekly hospital admissions per disease are reported and each state sub-chart has a different Y-axis scale. Hospitalizations represent an estimate of the burden of severe disease and impact on the on healthcare system for each virus. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent.
-  </p>
-</div>
-
-<br><br><br>
 
 ```{r table, echo=FALSE, warning=FALSE}
 kpi_hosp <- nhsn %>%
@@ -886,7 +1088,7 @@ kpi <- full_join(kpi_ed, kpi_hosp, by = c("State","Virus")) %>%
 gt::gt(kpi) %>%
   gt::fmt_missing(everything(), missing_text = "—") %>%
   gt::tab_header(
-    title = md("**Current Situation (latest available week)**"),
+    title = md("**Current Situation (latest available week)**")
   ) %>%
   gt::cols_hide(
     columns = c('Hosp Week End','ED Week End')
@@ -905,7 +1107,7 @@ gt::gt(kpi) %>%
     <li>
       This report describes recent state-level trends in respiratory virus activity in Arizona, Colorado, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on <a href="https://www.cdc.gov/nssp/php/about/index.html">National Syndromic Surveillance Program (NSSP)</a> data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from <a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National Healthcare Safety Network (NHSN)</a> data and estimate the burden of severe disease and impact on the healthcare system caused by each virus. Emergency department visit and hospitalization data from the previous year are also shown for  comparison.
       <ul>
-        <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive diseaseexp(-0.) dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
+                <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive diseaseexp(-0.) dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
         <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/respvaxview/about/index.html">RespVaxView</a>.</li>
         <li>Note: Some current estimates, particularly for emergency department utilization, may still be impacted by holiday reporting effects.</li>
     </ul>
