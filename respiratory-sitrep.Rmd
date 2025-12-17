@@ -367,13 +367,16 @@ pull_hub_forecasts <- function(repo_dir,
 }
 
 # Pull forecasts from each hub repo for the selected forecast_date
-flu_forecasts <- pull_hub_forecasts(
-  repo_dir    = flu_repo_dir,
-  disease     = "influenza",
-  hub_name    = "FluSight",
-  forecast_date = forecast_date,
-  loc_ids     = state_location_ids
-)
+
+# Flu currently does not have any ensemble forecasts posted for this season
+# flu_forecasts <- pull_hub_forecasts(
+#   repo_dir    = flu_repo_dir,
+#   disease     = "influenza",
+#   hub_name    = "FluSight",
+#   forecast_date = forecast_date,
+#   loc_ids     = state_location_ids
+# ) %>%
+#   dplyr::filter(model == "FluSight-ensemble")
 
 covid_forecasts <- pull_hub_forecasts(
   repo_dir    = covid_repo_dir,
@@ -381,7 +384,8 @@ covid_forecasts <- pull_hub_forecasts(
   hub_name    = "COVID-19 Forecast Hub",
   forecast_date = forecast_date,
   loc_ids     = state_location_ids
-)
+) %>%
+  dplyr::filter(model == "CovidHub-ensemble")
 
 rsv_forecasts <- pull_hub_forecasts(
   repo_dir    = rsv_repo_dir,
@@ -389,40 +393,13 @@ rsv_forecasts <- pull_hub_forecasts(
   hub_name    = "RSV Forecast Hub",
   forecast_date = forecast_date,
   loc_ids     = state_location_ids
-)
+) %>%
+  dplyr::filter(model == "RSVHub-ensemble")
 
-# Combine and attach location_name / abbreviation using your existing helper
-hub_forecasts <- dplyr::bind_rows(
-  flu_forecasts,
-  covid_forecasts,
-  rsv_forecasts
-)
-
-hub_forecasts <- ensure_locations(
-  hub_forecasts,
-  geo_ids     = geo_ids,
-  state_names = state_names,
-  loc_data    = ld
-)
 
 ```
 
 
-
-
-
-# ```{r copy-round, eval=TRUE, message=FALSE}
-# 
-# flu_ens <- c("FluSight-ensemble")
-# covid_ens <- "CovidHub-ensemble"
-# rsv_ens <- "RSVHub-ensemble"
-# 
-# 
-# # copy Forecast Hub forecasts to model-output folder
-# copy_fch_outputs(flu_repo_dir,
-#                  forecast_date,
-#                  models_to_copy = flu_ens)
-# ```
 
 
 
