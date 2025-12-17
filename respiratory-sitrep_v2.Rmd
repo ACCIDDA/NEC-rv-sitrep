@@ -326,7 +326,6 @@ if (length(img_tags) == 0) {
 
 <br>
 
-
 ```{r cdc-rt-trend-maps-with-paired-summaries, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 # Paired layout: for each disease emit a single row with a left summary box and the choropleth on the right. Uses the CDC "Epidemic Trends and Rt" dataset.
 
@@ -674,7 +673,6 @@ nhsn <- ensure_locations(nhsn,
                          loc_data = ld)
 
 ```
-
 
 ```{r pull-nssp, include=FALSE}
 
@@ -1058,7 +1056,6 @@ theme_bw(base_size = 16) +
 
 
 ```{r table, echo=FALSE, warning=FALSE}
-
 kpi_hosp <- nhsn %>%
   group_by(abbreviation, location_name, disease) %>%
   slice_max(order_by = target_end_date, n = 1, with_ties = FALSE) %>%
@@ -1112,8 +1109,8 @@ gt::gt(kpi) %>%
       <ul>
                 <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive diseaseexp(-0.) dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
         <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/respvaxview/about/index.html">RespVaxView</a>.</li>
-        <li>Note: Some current estimates, particularly for emergency department utilization, may still be impacted by holiday reporting effects.<li>
-      </ul>
+        <li>Note: Some current estimates, particularly for emergency department utilization, may still be impacted by holiday reporting effects.</li>
+    </ul>
     </li>
   </ul>
 </div>
