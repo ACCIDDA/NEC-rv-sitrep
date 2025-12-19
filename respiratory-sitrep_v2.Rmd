@@ -6,6 +6,19 @@ output:
     toc: true
     toc_depth: 2
     theme: cosmo
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    latex_engine: xelatex
+geometry: margin=1in
+fontsize: 11pt
+mainfont: "Calibri"
+header-includes: 
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
 params:
   state_names: ["Arizona", "Colorado", "New Mexico", "Utah"]
   geo_ids: ["az", "co", "nm", "ut"]
@@ -13,17 +26,13 @@ params:
   weeks_back: 12
 ---
 
-<!-- stronger styles: increases spacing, targets figure wrappers and gt tables, and styles the summary box -->
-<style>
-/* ========= Logo placement & sizing (adjustable) =========
-   Default: logos centered at the very top of the page, above the title.
-   - To shrink logos change --logo-max-height to 80px or 72px.
-   - To move logos to the top-right instead of centered:
-       replace left:50% & transform:translateX(-50%) with right:12px
-       and remove the translateX transform (instructions included).
-   - If logos overlap the title, increase the .container padding-top value below (currently 7.5rem).
-   ======================================================== */
 
+```{r html-css-only, echo=FALSE, results='asis'}
+
+if(knitr::is_html_output()) {
+  cat('
+
+<style>
 :root {
   --logo-max-height: 96px;  /* default ~2x larger. change to 80px or 72px if desired */
   --logo-top-offset: 8px;
@@ -80,100 +89,107 @@ params:
 /* shrink ACCIDDA (third) */
 .rpt-top-logos img:nth-child(3) { max-height: 65px !important; }
 
-/* Ensure the page content is pushed down so the title isn't overlaid */
-.container, .main-container, .content {
-  padding-top: var(--page-padding-top) !important;
-}
+/* Ensure the page content is pushed down so the title isnt overlaid */
+  .container, .main-container, .content {
+    padding-top: var(--page-padding-top) !important;
+  }
 
 /* Mobile: flow logos inline under title and shrink them */
-@media (max-width: 700px) {
-  .rpt-top-logos {
-    position: static;
-    transform: none;
-    margin: 0.45rem 0;
-    justify-content: center;
+  @media (max-width: 700px) {
+    .rpt-top-logos {
+      position: static;
+      transform: none;
+      margin: 0.45rem 0;
+      justify-content: center;
+    }
+    .rpt-top-logos img { max-height: 56px !important; }
+    .container, .main-container, .content { padding-top: 1rem !important; }
   }
-  .rpt-top-logos img { max-height: 56px !important; }
-  .container, .main-container, .content { padding-top: 1rem !important; }
-}
 
 /* ========= other page styles (unchanged) ========= */
-
-/* headings */
-body h1, body h2, body h3, body h4 {
-  margin-top: 2.0rem !important;
-  margin-bottom: 1.5rem !important;
-}
+  
+  /* headings */
+  body h1, body h2, body h3, body h4 {
+    margin-top: 2.0rem !important;
+    margin-bottom: 1.5rem !important;
+  }
 
 /* space above & below horizontal rules */
-hr {
-  margin-top: 2.0rem !important;
-  margin-bottom: 2.5rem !important;
-  border: 0;
-  border-top: 1px solid rgba(0,0,0,0.08);
-}
+  hr {
+    margin-top: 2.0rem !important;
+    margin-bottom: 2.5rem !important;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
 
 /* R Markdown figure wrappers */
-div.figure, div.plot, .knitr-plot, .figure {
-  margin-top: 2.0rem !important;
-  margin-bottom: 3.0rem !important;
-  padding-bottom: 0.5rem !important;
-}
+  div.figure, div.plot, .knitr-plot, .figure {
+    margin-top: 2.0rem !important;
+    margin-bottom: 3.0rem !important;
+    padding-bottom: 0.5rem !important;
+  }
 
 /* images inside figure containers (ensures gap below images) */
-div.figure img, .knitr-plot img {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 1.5rem !important;
-}
+  div.figure img, .knitr-plot img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem !important;
+  }
 
 /* If facets or ggplot wrap inside .plotly or .plot, apply spacing too */
-.plotly, .plot {
-  margin-bottom: 2.5rem !important;
-}
+  .plotly, .plot {
+    margin-bottom: 2.5rem !important;
+  }
 
 /* GT table wrapper (gt outputs a div.gt_table) */
-div.gt_table, .gt_table, .gt {
-  margin-top: 1.25rem !important;
-  margin-bottom: 1.75rem !important;
-}
+  div.gt_table, .gt_table, .gt {
+    margin-top: 1.25rem !important;
+    margin-bottom: 1.75rem !important;
+  }
 
 /* Summary box styling - high contrast and visible */
-.summary-box, .well.summary-box, .panel.summary-box {
-  border: 2px solid #1f4e79 !important;
-  background: linear-gradient(#fbfeff, #f3f8fc) !important;
-  padding: 1.15rem 1.25rem !important;
-  border-radius: 6px !important;
-  box-shadow: 0 1px 2px rgba(31,78,121,0.08) !important;
-  margin-bottom: 1.75rem !important;
-}
+  .summary-box, .well.summary-box, .panel.summary-box {
+    border: 2px solid #1f4e79 !important;
+    background: linear-gradient(#fbfeff, #f3f8fc) !important;
+      padding: 1.15rem 1.25rem !important;
+      border-radius: 6px !important;
+      box-shadow: 0 1px 2px rgba(31,78,121,0.08) !important;
+      margin-bottom: 1.75rem !important;
+      }
 
 /* ensure lists inside box are tight but readable */
-.summary-box ul {
-  margin: 0;
-  padding-left: 1.15rem;
-}
+  .summary-box ul {
+    margin: 0;
+    padding-left: 1.15rem;
+  }
 .summary-box li {
   margin-bottom: 0.45rem;
   line-height: 1.35;
 }
 
 /* fallback: if bootstrap .well/panel used, boost their padding/spacing */
-.well, .panel {
-  padding: 1rem !important;
-}
+  .well, .panel {
+    padding: 1rem !important;
+  }
 
 /* small screens: preserve spacing but not huge gaps */
-@media (max-width: 700px) {
-  div.figure, .knitr-plot, .plot {
-    margin-bottom: 1.5rem !important;
+  @media (max-width: 700px) {
+    div.figure, .knitr-plot, .plot {
+      margin-bottom: 1.5rem !important;
+    }
+    .summary-box {
+      padding: 0.85rem !important;
+    }
   }
-  .summary-box {
-    padding: 0.85rem !important;
-  }
-}
 </style>
+  
+  ')
+}
+
+
+```
+
 
 
 ```{r setup, include=FALSE}
@@ -184,6 +200,18 @@ knitr::opts_chunk$set(
   fig.retina = 2,
   fig.width = 12, 
   fig.height = 6
+)
+
+is_pdf <- knitr::is_latex_output()
+
+knitr::opts_chunk$set(
+  echo = FALSE, message = FALSE, warning = FALSE,
+  fig.align = "center",
+  out.width = if (is_pdf) "100%" else "100%",
+  fig.retina = if (is_pdf) 1 else 2,
+  fig.width  = if (is_pdf) 7.5 else 12,
+  fig.height = if (is_pdf) 4.8 else 6,
+  dpi = 300
 )
 
 # Install & load packages 
@@ -219,7 +247,6 @@ library(tidyr)
 library(stringr)
 library(maps)
 
-
 # Parameters
 state_names <- params$state_names
 geo_ids <- params$geo_ids
@@ -231,6 +258,9 @@ weeks_back <- params$weeks_back
 
 today <- lubridate::today(tzone = "America/Denver")
 forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
+
+## TEMP
+forecast_date2 <- as.character("2025-12-20")
 
 # Location reference table from package (if available)
 
@@ -297,6 +327,9 @@ ensure_locations <- function(df, geo_ids, state_names, loc_data = NULL) {
 ```
 
 ```{r include-logos, echo=FALSE, results='asis'}
+
+if(knitr::is_html_output()) {
+
 # Local logo paths (change to relative paths to share/publish the report)
 logo_paths <- c(
     'logos/NEC-logo-1000.jpg',
@@ -322,6 +355,22 @@ if (length(img_tags) == 0) {
   html <- paste0('<div class="rpt-top-logos">', paste(img_tags, collapse = "\n"), '</div>')
   knitr::asis_output(html)
 }
+}
+```
+
+
+```{r include-logos-pdf, echo=FALSE, results='asis'}
+if (knitr::is_latex_output()) {
+  cat("
+\\begin{center}
+\\includegraphics[height=1.2cm]{logos/NEC-logo-1000.jpg}\\hspace{0.6cm}
+\\includegraphics[height=1.2cm]{logos/BSPH.logo.rgb_horizontal.blue.png}\\hspace{0.6cm}
+\\includegraphics[height=1.0cm]{logos/ACCIDDALogoSmall.png}
+\\end{center}
+\\vspace{0.3cm}
+")
+}
+
 ```
 
 <br>
@@ -336,11 +385,11 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-    "The current COVID epidemic trend (based on data reported through 12/09/2025) is **declining** for Arizona, **likely growing** for Colorado, **not changing** for New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona and Utah, and **low** for Colorado and New Mexico.",
+    "The current COVID epidemic trend (based on data reported through 12/16/2025) **likely growing** for Arizona and New Mexico, **not changing** for Colorado, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for New Mexico and **very low** for Arizona, Colorado, and Utah.",
   
-  "The current flu epidemic trend (based on data reported through 12/09/2025) is **likely growing** for Arizona, **growing** for Colorado and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **low** for Arizona, New Mexico and Utah, and **moderate** for Colorado.",
+  "The current flu epidemic trend (based on data reported through 12/16/2025) is **growing** for Arizona, Colorado, and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **high** for Colorado, **moderate** for Utah, and **low** for Arizona and New Mexico.",
   
-    "The current RSV epidemic trend  (based on data reported through 12/09/2025) is **growing** for Arizona, Colorado and New Mexico, but is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with RSV was **very low** for Arizona, New Mexico and Utah, and **low** for Colorado."
+    "The current RSV epidemic trend  (based on data reported through 12/16/2025) is **growing** for Arizona, Colorado and New Mexico, but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Colorado and Utah and **very low** for Arizona and New Mexico."
 )
 
 # --------------------
@@ -591,20 +640,31 @@ plot_for_disease <- function(keyword, requested_states) {
 plots_list <- lapply(diseases_to_plot, function(k) plot_for_disease(k, states_to_show))
 
 # Emit per-disease paired rows: left small box (summary), right map
-for (i in seq_along(diseases_to_plot)) {
-  cat('<div class="row pair-row">')
-
-  # left column: summary for this disease
-  cat('<div class="col-md-4">')
-  cat(sprintf('<div class="summary-item"><h4>%s</h4><p>%s</p></div>', toupper(diseases_to_plot[i]), summary_bullets[i]))
-  cat('</div>')
-
-  # right column: plot for this disease
-  cat('<div class="col-md-8 plot-wrap">')
-  print(plots_list[[i]])
-  cat('</div>')
-
-  cat('</div>') # close pair row
+if(knitr::is_html_output()) {
+  for (i in seq_along(diseases_to_plot)) {
+    
+    cat('<div class="row pair-row">')
+    
+    # left column: summary for this disease
+    cat('<div class="col-md-4">')
+    cat(sprintf('<div class="summary-item"><h4>%s</h4><p>%s</p></div>', toupper(diseases_to_plot[i]), summary_bullets[i]))
+    cat('</div>')
+    
+    # right column: plot for this disease
+    cat('<div class="col-md-8 plot-wrap">')
+    print(plots_list[[i]])
+    cat('</div>')
+    
+    cat('</div>') # close pair row
+  }
+} else {
+  for (i in seq_along(diseases_to_plot)) {
+    cat("\n\n")
+    cat("### ", toupper(diseases_to_plot[i]), "\n\n")
+    cat(summary_bullets[i], "\n\n")
+    print(plots_list[[i]])
+    cat("\n\n\\newpage\n\n")  # optional: one disease per page
+  }
 }
 
 ```
@@ -764,7 +824,7 @@ state_location_ids <- unique(state_loc_lookup$location)
 pull_hub_forecasts <- function(repo_dir,
                                disease,
                                hub_name,
-                               forecast_date,
+                               forecast_date2,
                                loc_ids) {
   model_output_dir <- file.path(repo_dir, "model-output")
   if (!dir.exists(model_output_dir)) {
@@ -778,7 +838,7 @@ pull_hub_forecasts <- function(repo_dir,
     file_path <- file.path(
       model_output_dir,
       m,
-      sprintf("%s-%s.csv", forecast_date, m)
+      sprintf("%s-%s.csv", forecast_date2, m)
     )
     if (!file.exists(file_path)) {
       return(tibble::tibble())
@@ -799,7 +859,7 @@ pull_hub_forecasts <- function(repo_dir,
         model   = m,
         disease = disease,
         hub     = hub_name,
-        forecast_date = as.Date(forecast_date)
+        forecast_date = as.Date(forecast_date2)
       )
   })
 }
@@ -809,7 +869,7 @@ flu_forecasts <- pull_hub_forecasts(
   repo_dir    = flu_repo_dir,
   disease     = "influenza",
   hub_name    = "FluSight",
-  forecast_date = forecast_date,
+  forecast_date = forecast_date2,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "FluSight-ensemble")
@@ -818,7 +878,7 @@ covid_forecasts <- pull_hub_forecasts(
   repo_dir    = covid_repo_dir,
   disease     = "covid",
   hub_name    = "COVID-19 Forecast Hub",
-  forecast_date = forecast_date,
+  forecast_date = forecast_date2,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "CovidHub-ensemble")
@@ -827,7 +887,7 @@ rsv_forecasts <- pull_hub_forecasts(
   repo_dir    = rsv_repo_dir,
   disease     = "rsv",
   hub_name    = "RSV Forecast Hub",
-  forecast_date = forecast_date,
+  forecast_date = forecast_date2,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "RSVHub-ensemble")
@@ -889,7 +949,7 @@ hub_fc_pi <- hub_fc_q %>%
     value
   ) %>%
   tidyr::pivot_wider(names_from =output_type_id, values_from = value) %>%
-  rename(fc_lo = `0.25`, fc_hi = `0.75`)
+  rename(fc_lo = `0.25`, fc_hi = `0.75`) 
 
 
 ```
@@ -897,18 +957,22 @@ hub_fc_pi <- hub_fc_q %>%
 
 <br><br><br>
 
+# Hospital Admissions by Disease
 
-```{r timeseries-plot-nhsn, echo=FALSE, warning=FALSE}
+```{r timeseries-plot-nhsn-by-disease, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
 
 okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
 
-# Prepare recent/current slices (group-wise) for NHSN
+# Prep NHSN data
 nhsn_recent <- nhsn %>%
   group_by(geo_value, disease) %>%
   filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
   ungroup()
 
-# Prepare last year's corresponding weeks (extend the previous season end by one month) for NHSN
 nhsn_last_raw <- nhsn %>%
   group_by(geo_value, disease) %>%
   filter(
@@ -917,58 +981,102 @@ nhsn_last_raw <- nhsn %>%
   ) %>%
   ungroup()
 
-# Shift last year's dates forward by 1 year so they overlay on the current x-axis
 nhsn_last_overlay <- nhsn_last_raw %>%
   mutate(target_end_date = target_end_date + years(1))
 
-# Combine into a single plotting data frame and annotate season
 nhsn_plot_data <- bind_rows(
   nhsn_recent %>% mutate(season = "Current"),
   nhsn_last_overlay %>% mutate(season = "Previous season")
 ) %>%
-  mutate(disease_label = toupper(disease))
-
-# Plot NHSN with previous season overlay
-ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
-  geom_line(size = 1) +
-  # Forecast interval ribbon (optional)
-  geom_ribbon(
-    data = hub_fc_pi,
-    aes(x = target_end_date, ymin = fc_lo, ymax = fc_hi, fill = disease_label),
-    inherit.aes = FALSE,
-    alpha = 0.15
-  ) +
-  # Forecast median line
-  geom_line(
-    data = hub_fc_med,
-    aes(x = target_end_date, y = fc_med, color = disease_label),
-    inherit.aes = FALSE,
-    linewidth = 1,
-    linetype = "longdash"
-  ) +
-  geom_vline(xintercept = today, linetype = "dotted") +
-  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 2) +
-  scale_color_manual(values = okabe_ito, name = "Disease") +
-  scale_linetype_manual(
-    name = "Season",
-    values = c("Current" = "solid", "Previous season" = "dotted"),
-    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
-  ) +
-  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
-  guides(fill = "none") +
-  labs(title = "Total State-level Hospital Admissions, per Disease \n(with associated hub ensemble forecasts)",
-       x = NULL, y = "Weekly hospital admissions", caption = "Data source: National Healthcare Safety Network (NHSN) data details") +
-  theme_bw(base_size = 16) +
-  theme(
-    strip.text = element_text(size = 18),
-    plot.title = element_text(size = 20, face = "bold"),
-    axis.title = element_text(size = 16),
-    axis.text = element_text(size = 14),
-    legend.title = element_text(size = 16),
-    legend.text = element_text(size = 14)
+  mutate(
+    disease_label = toupper(disease),
+    state_label   = toupper(geo_value)
   )
 
+hub_fc_med <- hub_fc_med %>% mutate(state_label = toupper(geo_value))
+hub_fc_pi <- hub_fc_pi %>% mutate(state_label = toupper(geo_value))
+
+
+# ----------------------------
+# Plot function: one disease per figure
+#   - color is fixed (not mapped), so no legends
+#   - forecasts are filtered by disease_label only (as in your original)
+# ----------------------------
+diseases_to_plot <- sort(unique(nhsn_plot_data$disease_label))
+disease_cols <- setNames(okabe_ito[seq_along(diseases_to_plot)], diseases_to_plot)
+
+plot_one_disease <- function(dz) {
+
+  dz_col <- disease_cols[[dz]]
+
+  ggplot(
+    nhsn_plot_data %>% filter(disease_label == dz),
+    aes(x = target_end_date, y = observation, linetype = season, alpha = season)
+  ) +
+    # NHSN lines (current + previous)
+    geom_line(linewidth = 1, color = dz_col) +
+
+    # Forecast PI ribbon
+    geom_ribbon(
+      data = hub_fc_pi %>% filter(toupper(disease_label) == dz),
+      aes(x = target_end_date, ymin = fc_lo, ymax = fc_hi),
+      inherit.aes = FALSE,
+      fill = dz_col,
+      alpha = 0.15
+    ) +
+
+    # Forecast median
+    geom_line(
+      data = hub_fc_med %>% filter(toupper(disease_label) == dz),
+      aes(x = target_end_date, y = fc_med),
+      inherit.aes = FALSE,
+      linewidth = 1,
+      linetype = "longdash",
+      color = dz_col
+    ) +
+
+    geom_vline(xintercept = today, linetype = "dotted") +
+
+    facet_wrap(~ state_label, scales = "free_y", ncol = 2) +
+
+    scale_linetype_manual(
+      name = NULL,
+      values = c("Current" = "solid", "Previous season" = "dotted"),
+      labels = c("Current" = "Current (2025–26)", "Previous season" = "Previous (2024–25)")
+    ) +
+    scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.7), guide = "none") +
+
+    labs(
+      title = dz,
+      subtitle = "Total State-level Hospital Admissions\n(with associated hub ensemble forecasts)",
+      x = NULL,
+      y = "Weekly hospital admissions",
+      caption = "Data Source: National Healthcare Safety Network (NHSN)"
+    ) +
+
+    theme_minimal(base_size = 16) +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(linewidth = 0.3),
+      panel.grid.major.y = element_line(linewidth = 0.3),
+      strip.text = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 20, face = "bold"),
+      plot.subtitle = element_text(size = 13),
+      axis.title.y = element_text(size = 14),
+      axis.text = element_text(size = 12),
+      legend.position = "top",
+      legend.text = element_text(size = 12)
+    )
+}
+
+# Print one figure per disease
+for (dz in diseases_to_plot) {
+  print(plot_one_disease(dz))
+}
+
 ```
+
+
 
 <div class="summary-box">
   <ul style="list-style-type: none; padding-left: 0;">
@@ -985,66 +1093,103 @@ ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease
 
 <br><br><br>
 
-```{r timeseries-plot-nssp, echo=FALSE, warning=FALSE}
+# Percent of Emergency Department Visits by Disease
 
-# Prepare recent/current slices (group-wise) for NSSP week_end / ed_pct
+```{r timeseries-plot-nssp-by-disease, echo=FALSE, warning=FALSE, message=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+
+# --- Prep recent/current slices (group-wise) for NSSP
 nssp_recent <- nssp %>%
   group_by(abbreviation, disease) %>%
   filter(week_end >= (max(week_end) - weeks(weeks_back))) %>%
   ungroup()
 
-# Prepare last year's corresponding weeks but extend the previous season end by one month:
-# - start: same (max - weeks_back - 1 year)
-# - end: (max - 1 year + 1 month)  <-- extended one month further than the matching window
+# --- Prep last year's corresponding weeks (extend previous season end by one month)
 nssp_last_raw <- nssp %>%
   group_by(abbreviation, disease) %>%
   filter(
     week_end >= (max(week_end) - weeks(weeks_back) - years(1)) &
-    week_end <= (max(week_end) - years(1) + months(1))
+      week_end <= (max(week_end) - years(1) + months(1))
   ) %>%
   ungroup()
 
-# Shift last year's dates forward by 1 year so they overlay on the current x-axis (so the extra month appears past current max)
+# --- Shift last year's dates forward by 1 year so they overlay on the current x-axis
 nssp_last_overlay <- nssp_last_raw %>%
   mutate(week_end = week_end + years(1))
 
-# Combine into a single plotting data frame and annotate season
+# --- Combine and label
 nssp_plot_data <- bind_rows(
   nssp_recent %>% mutate(season = "Current"),
   nssp_last_overlay %>% mutate(season = "Previous season")
 ) %>%
-  mutate(disease_label = toupper(disease))
-
-# Plot NSSP with previous season overlay
-ggplot(nssp_plot_data, aes(x = week_end, y = ed_pct, color = disease_label, linetype = season, alpha = season)) +
-  geom_line(size = 1) +
-  geom_vline(xintercept = today, linetype = "dotted") +
-  facet_wrap(~ abbreviation, scales = "fixed", ncol = 2) +
-  scale_color_manual(values = okabe_ito, name = "Disease") +
-  scale_linetype_manual(
-    name = "Season",
-    values = c("Current" = "solid", "Previous season" = "dotted"),
-    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
-  ) +
-  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
-  labs(title = "Percent of all Emergency Department Visits due to Each Disease, State-Level",
-       x = NULL, y = "Percent of ED visits", caption = "Data source: National Syndromic Surveillance Program (NSSP) data details") +
-theme_bw(base_size = 16) +
-  theme(
-    strip.text = element_text(size = 18),
-    plot.title = element_text(size = 20, face = "bold"),
-    axis.title = element_text(size = 16),
-    axis.text = element_text(size = 14),
-    legend.title = element_text(size = 16),
-    legend.text = element_text(size = 14)
+  mutate(
+    disease_label = toupper(disease),
+    state_label   = toupper(abbreviation)
   )
+
+# --- Stable color per disease (same approach as NHSN figure)
+diseases_to_plot <- sort(unique(nssp_plot_data$disease_label))
+disease_cols <- setNames(okabe_ito[seq_along(diseases_to_plot)], diseases_to_plot)
+
+plot_one_disease_nssp <- function(dz) {
+
+  dz_col <- disease_cols[[dz]]
+
+  ggplot(
+    nssp_plot_data %>% filter(disease_label == dz),
+    aes(x = week_end, y = ed_pct, linetype = season, alpha = season)
+  ) +
+    geom_line(linewidth = 1, color = dz_col) +
+    geom_vline(xintercept = today, linetype = "dotted") +
+    facet_wrap(~ state_label, scales = "fixed", ncol = 2) +
+    scale_linetype_manual(
+      name = NULL,
+      values = c("Current" = "solid", "Previous season" = "dotted"),
+      labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
+    ) +
+    scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.7), guide = "none") +
+    labs(
+      title = dz,
+      subtitle = "Percent of all Emergency Department Visits (NSSP)",
+      x = NULL,
+      y = "Percent of ED visits",
+      caption = "Data source: National Syndromic Surveillance Program (NSSP)"
+    ) +
+    theme_minimal(base_size = 16) +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(linewidth = 0.3),
+      panel.grid.major.y = element_line(linewidth = 0.3),
+      strip.text = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 20, face = "bold"),
+      plot.subtitle = element_text(size = 13),
+      axis.title.y = element_text(size = 14),
+      axis.text = element_text(size = 12),
+      legend.position = "top",
+      legend.text = element_text(size = 12)
+    )
+}
+
+# --- Print one figure per disease (each with 4 state panels)
+for (dz in diseases_to_plot) {
+  print(plot_one_disease_nssp(dz))
+}
+
 ```
 
 <div class="summary-box">
   <ul style="list-style-type: none; padding-left: 0;">
     <li>
         <p>
-      This figure shows the state-level trends in the impact of respiratory virus activity on emergency department (ED) visits based on National Syndromic Surveillance Program (NSSP) data. The broad coverage of this emergency department sample helps to provide reasonable estimates of how much symptomatic illness each virus is causing in each state. The percentage of visits for each disease out of all ED visits is shown to allow comparability across time and across states despite different overall ED visit volume. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent.
+      This figure shows the state-level trends in the impact of respiratory virus activity on emergency department (ED) visits based on National Syndromic Surveillance Program (NSSP) data. The broad coverage of this emergency department sample helps to provide reasonable estimates of how much symptomatic illness each virus is causing in each state. The percentage of visits for each disease out of all ED visits is shown to allow comparability across time and across states despite different overall ED visit volume. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent. <br>
+      <b>
+      Forecasts: <br>
+      </b>
+      Forecasts are not yet available for emergency department visits.
       </p>
       <ul>
       </ul>
@@ -1085,17 +1230,29 @@ hosp_week_end <- unique(kpi_hosp$`Hosp Week End`)
 kpi <- full_join(kpi_ed, kpi_hosp, by = c("State","Virus")) %>%
   arrange(State, Virus)
 
-gt::gt(kpi) %>%
-  gt::fmt_missing(everything(), missing_text = "—") %>%
-  gt::tab_header(
-    title = md("**Current Situation (latest available week)**")
-  ) %>%
-  gt::cols_hide(
-    columns = c('Hosp Week End','ED Week End')
-) %>%
-  gt::tab_footnote(
-    footnote = md(paste0("Latest available hospitalization data from: ", hosp_week_end, ";  ", "latest available ED data from: ", ed_week_end))
-  )
+if (knitr::is_html_output()) {
+
+  gt::gt(kpi) %>%
+    gt::fmt_missing(everything(), missing_text = "—") %>%
+    gt::tab_header(title = gt::md("**Current Situation (latest available week)**")) %>%
+    gt::cols_hide(columns = c('Hosp Week End','ED Week End')) %>%
+    gt::tab_footnote(
+      footnote = gt::md(paste0("Latest hosp: ", paste(hosp_week_end, collapse=", "),
+                               "; latest ED: ", paste(ed_week_end, collapse=", ")))
+    )
+
+} else {
+
+  # PDF: kableExtra
+  if (!requireNamespace("kableExtra", quietly = TRUE)) install.packages("kableExtra")
+  library(kableExtra)
+
+  kpi_pdf <- kpi %>% dplyr::select(-`Hosp Week End`, -`ED Week End`)
+
+  knitr::kable(kpi_pdf, format = "latex", booktabs = TRUE,
+               caption = "Current Situation (latest available week)") %>%
+    kableExtra::kable_styling(latex_options = c("hold_position", "striped"), font_size = 10)
+}
 
 ```
 
