@@ -259,8 +259,6 @@ weeks_back <- params$weeks_back
 today <- lubridate::today(tzone = "America/Denver")
 forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
 
-## TEMP
-forecast_date2 <- as.character("2025-12-20")
 
 # Location reference table from package (if available)
 
@@ -385,11 +383,11 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-    "The current COVID epidemic trend (based on data reported through 12/16/2025) **likely growing** for Arizona and New Mexico, **not changing** for Colorado, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for New Mexico and **very low** for Arizona, Colorado, and Utah.",
+    "The current COVID epidemic trend (based on data reported through 12/28/2025) **growing** for Arizona, Colorado, and New Mexico and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and New Mexico and **very low** for Arizona and Utah.",
   
-  "The current flu epidemic trend (based on data reported through 12/16/2025) is **growing** for Arizona, Colorado, and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **high** for Colorado, **moderate** for Utah, and **low** for Arizona and New Mexico.",
+  "The current flu epidemic trend (based on data reported through 12/28/2025) is **not changing** for Arizona, Colorado, and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **very high** for Colorado, **high** for Utah, **moderate** for New Mexico, and **low** for Arizona.",
   
-    "The current RSV epidemic trend  (based on data reported through 12/16/2025) is **growing** for Arizona, Colorado and New Mexico, but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Colorado and Utah and **very low** for Arizona and New Mexico."
+    "The current RSV epidemic trend  (based on data reported through 12/28/2025) is **growing** for Arizona, Colorado and New Mexico, but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, and Utah and **very low** for New Mexico."
 )
 
 # --------------------
@@ -824,7 +822,7 @@ state_location_ids <- unique(state_loc_lookup$location)
 pull_hub_forecasts <- function(repo_dir,
                                disease,
                                hub_name,
-                               forecast_date2,
+                               forecast_date,
                                loc_ids) {
   model_output_dir <- file.path(repo_dir, "model-output")
   if (!dir.exists(model_output_dir)) {
@@ -838,7 +836,7 @@ pull_hub_forecasts <- function(repo_dir,
     file_path <- file.path(
       model_output_dir,
       m,
-      sprintf("%s-%s.csv", forecast_date2, m)
+      sprintf("%s-%s.csv", forecast_date, m)
     )
     if (!file.exists(file_path)) {
       return(tibble::tibble())
@@ -859,7 +857,7 @@ pull_hub_forecasts <- function(repo_dir,
         model   = m,
         disease = disease,
         hub     = hub_name,
-        forecast_date = as.Date(forecast_date2)
+        forecast_date = as.Date(forecast_date)
       )
   })
 }
@@ -869,7 +867,7 @@ flu_forecasts <- pull_hub_forecasts(
   repo_dir    = flu_repo_dir,
   disease     = "influenza",
   hub_name    = "FluSight",
-  forecast_date = forecast_date2,
+  forecast_date = forecast_date,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "FluSight-ensemble")
@@ -878,7 +876,7 @@ covid_forecasts <- pull_hub_forecasts(
   repo_dir    = covid_repo_dir,
   disease     = "covid",
   hub_name    = "COVID-19 Forecast Hub",
-  forecast_date = forecast_date2,
+  forecast_date = forecast_date,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "CovidHub-ensemble")
@@ -887,7 +885,7 @@ rsv_forecasts <- pull_hub_forecasts(
   repo_dir    = rsv_repo_dir,
   disease     = "rsv",
   hub_name    = "RSV Forecast Hub",
-  forecast_date = forecast_date2,
+  forecast_date = forecast_date,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "RSVHub-ensemble")
