@@ -258,7 +258,7 @@ weeks_back <- params$weeks_back
 
 today <- lubridate::today(tzone = "America/Denver")
 forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
-
+hub_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1 + 7)
 
 # Location reference table from package (if available)
 
@@ -383,11 +383,11 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-    "The current COVID epidemic trend (based on data reported through 12/28/2025) **growing** for Arizona, Colorado, and New Mexico and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and New Mexico and **very low** for Arizona and Utah.",
+    "The current COVID epidemic trend (based on data reported through 1/6/2026) **declining** for Arizona and New Mexico, **not changing** for Colorado, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and New Mexico and **very low** for Arizona and Utah.",
   
-  "The current flu epidemic trend (based on data reported through 12/28/2025) is **not changing** for Arizona, Colorado, and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **very high** for Colorado, **high** for Utah, **moderate** for New Mexico, and **low** for Arizona.",
+  "The current flu epidemic trend (based on data reported through 1/6/2026) is **declining** for Arizona, Colorado, and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **very high** for Colorado and Utah, **high** for New Mexico, and **moderate** for Arizona.",
   
-    "The current RSV epidemic trend  (based on data reported through 12/28/2025) is **growing** for Arizona, Colorado and New Mexico, but is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, and Utah and **very low** for New Mexico."
+    "The current RSV epidemic trend  (based on data reported through 1/6/2026) is **growing** for Colorado and New Mexico, **likely growing** for Arizona, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, New Mexico, and Utah."
 )
 
 # --------------------
@@ -836,7 +836,7 @@ pull_hub_forecasts <- function(repo_dir,
     file_path <- file.path(
       model_output_dir,
       m,
-      sprintf("%s-%s.csv", forecast_date, m)
+      sprintf("%s-%s.csv", hub_date, m)
     )
     if (!file.exists(file_path)) {
       return(tibble::tibble())
@@ -867,7 +867,7 @@ flu_forecasts <- pull_hub_forecasts(
   repo_dir    = flu_repo_dir,
   disease     = "influenza",
   hub_name    = "FluSight",
-  forecast_date = forecast_date,
+  forecast_date = hub_date,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "FluSight-ensemble")
@@ -876,7 +876,7 @@ covid_forecasts <- pull_hub_forecasts(
   repo_dir    = covid_repo_dir,
   disease     = "covid",
   hub_name    = "COVID-19 Forecast Hub",
-  forecast_date = forecast_date,
+  forecast_date = hub_date,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "CovidHub-ensemble")
@@ -885,7 +885,7 @@ rsv_forecasts <- pull_hub_forecasts(
   repo_dir    = rsv_repo_dir,
   disease     = "rsv",
   hub_name    = "RSV Forecast Hub",
-  forecast_date = forecast_date,
+  forecast_date = hub_date,
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "RSVHub-ensemble")
