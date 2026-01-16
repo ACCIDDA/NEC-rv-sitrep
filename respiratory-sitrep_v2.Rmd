@@ -1288,28 +1288,31 @@ prev_vax_flu <- flu_vax %>%
   mutate(week_ending = week_ending + years(1))
 
 # ---- RSV ----
-rsv_season_col <- find_season_col(rsv_vax, c("season", "respiratory_season", "rsv_season"))
 rsv_vax <- rsv_vax %>%
   mutate(week_ending = lubridate::ymd(week_ending),
          line_type = ifelse(geography_name == "National", "National", "State"),
-         color_group = ifelse(geography_name == "National", "National", geography_name))
+         color_group = ifelse(geography_name == "National", "National", geography_name),
+         rsv_season = "2025-2026")
 
 current_vax_rsv <- rsv_vax %>%
   filter(age_group == "50+ years",
          geography_level %in% c("State", "National"),
          geography_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
          demographic_level == "Overall",
-         indicator_label == "Up-to-date"
+         indicator_label == "Up-to-date",
+         rsv_season == "2025-2026"
+
   )
 
-#prev_vax_rsv <- rsv_vax %>%
-#  filter(age_group == "50+ years",
-#         geography_level %in% c("State", "National"),
- #        geography_name %in% c("Arizona", "Colorado", "New #Mexico", "Utah", "National"),
- #        demographic_level == "Overall",
-  #       indicator_label == "Up-to-date"
-  #) %>%
-  #mutate(week_ending = week_ending + years(1))
+prev_vax_rsv <- rsv_vax %>%
+  filter(age_group == "50+ years",
+         geography_level %in% c("State", "National"),
+         geography_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
+         demographic_level == "Overall",
+         indicator_label == "Up-to-date",
+         rsv_season == "2024-2025"
+  ) %>%
+  mutate(week_ending = week_ending + years(1))
 
 # ---- Colors (keep mapping used previously) ----
 vax_colors <- c(
@@ -1321,76 +1324,177 @@ vax_colors <- c(
 )
 
 # ---- Plotting: add previous-season trajectories as dotted, half-transparent lines in same color ----
+# combine current + previous with a season label to make mapping simpler
+sc2_combined <- bind_rows(
+  current_vax_sc2 %>% mutate(season = "Current (2025-26)"),
+  prev_vax_sc2    %>% mutate(season = "Previous (2024-25)")
+) %>% mutate(geo_name = geographic_name)
 
-# COVID plot
-sc2_g1 <- ggplot() +
-  # previous-season overlay (dotted, alpha)
-  geom_line(
-    data = prev_vax_sc2,
-    aes(x = week_ending, y = estimate, color = color_group, group = geographic_name),
-    linewidth = 0.9, linetype = "dotted", alpha = 0.5
-  ) +
-  # current season
-  geom_line(
-    data = current_vax_sc2,
-    aes(x = week_ending, y = estimate, color = color_group, linetype = line_type, group = geographic_name),
-    linewidth = 1
-  ) +
-  geom_point(data = current_vax_sc2, aes(x = week_ending, y = estimate, color = color_group, group = geographic_name), size = 2) +
-  scale_x_date(date_labels = "%Y-%m-%d") +
+flu_combined <- bind_rows(
+  current_vax_flu %>% mutate(season = "Current (2025-26)"),
+  prev_vax_flu    %>% mutate(season = "Previous (2024-25)")
+) %>% mutate(geo_name = geographic_name)
+
+rsv_combined <- bind_rows(
+  current_vax_rsv %>% mutate(season = "Current (2025-26)"),
+  prev_vax_rsv    %>% mutate(season = "Previous (2024-25)")
+) %>% mutate(geo_name = ifelse(!is.na(geography_name), geography_name, geographic_name))  # handle naming differences
+
+# linetype keys (interaction of season and source type)
+lt_keys <- c(
+  "Current (2025-26).State",
+  "Current (2025-26).National",
+  "Previous (2024-25).State",
+  "Previous (2024-25).National"
+)
+lt_vals <- c("solid", "longdash", "dotted", "dotdash")
+lt_labels <- c("Current — State", "Current — National", "Previous — State", "Previous — National")
+
+# Common x-axis scale: month/day labels with monthly breaks
+x_scale <- scale_x_date(date_labels = "%b %d", date_breaks = "1 month")
+
+# --- COVID plot ---
+sc2_g1 <- ggplot(sc2_combined,
+                 aes(x = week_ending, y = estimate,
+                     color = color_group,
+                     linetype = interaction(season, line_type),
+                     alpha = season,
+                     group = interaction(geo_name, season))) +
+  geom_line(linewidth = 1) +
+  geom_point(data = filter(sc2_combined, season == "Current (2025-26)"),
+             aes(x = week_ending, y = estimate, color = color_group, group = geo_name),
+             size = 2) +
+  scale_color_manual(values = vax_colors,
+                     breaks = c("Arizona","Colorado","New Mexico","Utah","National"),
+                     name = "Geography") +
+  scale_linetype_manual(values = setNames(lt_vals, lt_keys),
+                        breaks = lt_keys,
+                        labels = lt_labels,
+                        name = "Line type") +
+  scale_alpha_manual(values = c("Current (2025-26)" = 1, "Previous (2024-2025)" = 0.55, "Previous (2024-25)" = 0.55),
+                     guide = "none") +
+  x_scale +
   scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
-  scale_color_manual(values = vax_colors, breaks = c("Arizona", "Colorado", "New Mexico", "Utah", "National"), name = "Geography") +
-  scale_linetype_manual(values = c("State" = "solid", "National" = "longdash"), guide = "none") +
-  labs(title = "Adult (18+) COVID Vaccination Coverage — National + AZ/CO/NM/UT",
-       x = "Week ending",
-       y = "Coverage (% Up-to-date)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(
+    title = "COVID VACCINATION",
+    subtitle = "Adult (18+) Vaccination Coverage — National + AZ/CO/NM/UT",
+    x = "Week ending",
+    y = "Coverage (% Up-to-date)",
+    caption = "Source: NIS-FRVM (CDC)"
+  ) +
+  guides(
+  color = guide_legend(nrow = 2, byrow = TRUE, title.position = "top"),
+  linetype = guide_legend(nrow = 2, byrow = TRUE, title.position = "top")
+) +
+theme_minimal(base_size = 14) +
+theme(
+  plot.title = element_text(size = 22, face = "bold", hjust = 0),
+  plot.subtitle = element_text(size = 11, hjust = 0),
+  axis.text.x = element_text(angle = 45, hjust = 1),
+  legend.position = "top",
+  legend.direction = "horizontal",
+  legend.key.width = grid::unit(1.0, "cm"),
+  legend.key.height = grid::unit(0.5, "cm"),
+  legend.title = element_text(size = 9),
+  legend.text = element_text(size = 8),
+  plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+)
 
 print(sc2_g1)
 
-# Influenza plot (note: flu y-column is named 'estimates' rather than 'estimate')
-flu_g1 <- ggplot() +
-  geom_line(
-    data = prev_vax_flu,
-    aes(x = week_ending, y = estimates, color = color_group, group = geographic_name),
-    linewidth = 0.9, linetype = "dashed", alpha = 0.5
-  ) +
-  geom_line(
-    data = current_vax_flu,
-    aes(x = week_ending, y = estimates, color = color_group, linetype = line_type, group = geographic_name),
-    linewidth = 1
-  ) +
-  geom_point(data = current_vax_flu, aes(x = week_ending, y = estimates, color = color_group, group = geographic_name), size = 2) +
-  scale_x_date(date_labels = "%Y-%m-%d") +
+# --- FLU plot (y = 'estimates' in source) ---
+flu_g1 <- ggplot(flu_combined,
+                 aes(x = week_ending, y = estimates,
+                     color = color_group,
+                     linetype = interaction(season, line_type),
+                     alpha = season,
+                     group = interaction(geo_name, season))) +
+  geom_line(linewidth = 1) +
+  geom_point(data = filter(flu_combined, season == "Current (2025-26)"),
+             aes(x = week_ending, y = estimates, color = color_group, group = geo_name),
+             size = 2) +
+  scale_color_manual(values = vax_colors,
+                     breaks = c("Arizona","Colorado","New Mexico","Utah","National"),
+                     name = "Geography") +
+  scale_linetype_manual(values = setNames(lt_vals, lt_keys),
+                        breaks = lt_keys,
+                        labels = lt_labels,
+                        name = "Line type") +
+  scale_alpha_manual(values = c("Current (2025-26)" = 1, "Previous (2024-25)" = 0.55), guide = "none") +
+  x_scale +
   scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
-  scale_color_manual(values = vax_colors, breaks = c("Arizona", "Colorado", "New Mexico", "Utah", "National"), name = "Geography") +
-  scale_linetype_manual(values = c("State" = "solid", "National" = "longdash"), guide = "none") +
-  labs(title = "Adult (18+) Flu Vaccination Coverage — National + AZ/CO/NM/UT",
-       x = "Week ending",
-       y = "Coverage (% Up-to-date)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(
+    title = "FLU VACCINATION",
+    subtitle = "Adult (18+) Vaccination Coverage — National + AZ/CO/NM/UT",
+    x = "Week ending",
+    y = "Coverage (% Up-to-date)",
+    caption = "Source: NIS-FRVM (CDC)"
+  ) +
+  guides(
+  color = guide_legend(nrow = 2, byrow = TRUE, title.position = "top"),
+  linetype = guide_legend(nrow = 2, byrow = TRUE, title.position = "top")
+) +
+theme_minimal(base_size = 14) +
+theme(
+  plot.title = element_text(size = 22, face = "bold", hjust = 0),
+  plot.subtitle = element_text(size = 11, hjust = 0),
+  axis.text.x = element_text(angle = 45, hjust = 1),
+  legend.position = "top",
+  legend.direction = "horizontal",
+  legend.key.width = grid::unit(1.0, "cm"),
+  legend.key.height = grid::unit(0.5, "cm"),
+  legend.title = element_text(size = 9),
+  legend.text = element_text(size = 8),
+  plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+)
 
 print(flu_g1)
 
-# RSV plot
-rsv_g1 <- ggplot() +
-  geom_line(
-    data = current_vax_rsv,
-    aes(x = week_ending, y = estimate, color = color_group, linetype = line_type, group = geography_name),
-    linewidth = 1
-  ) +
-  geom_point(data = current_vax_rsv, aes(x = week_ending, y = estimate, color = color_group, group = geography_name), size = 2) +
-  scale_x_date(date_labels = "%Y-%m-%d") +
+# --- RSV plot ---
+rsv_g1 <- ggplot(rsv_combined,
+                 aes(x = week_ending, y = estimate,
+                     color = color_group,
+                     linetype = interaction(season, line_type),
+                     alpha = season,
+                     group = interaction(geo_name, season))) +
+  geom_line(linewidth = 1) +
+  geom_point(data = filter(rsv_combined, season == "Current (2025-26)"),
+             aes(x = week_ending, y = estimate, color = color_group, group = geo_name),
+             size = 2) +
+  scale_color_manual(values = vax_colors,
+                     breaks = c("Arizona","Colorado","New Mexico","Utah","National"),
+                     name = "Geography") +
+  scale_linetype_manual(values = setNames(lt_vals, lt_keys),
+                        breaks = lt_keys,
+                        labels = lt_labels,
+                        name = "Line type") +
+  scale_alpha_manual(values = c("Current (2025-26)" = 1, "Previous (2024-25)" = 0.55), guide = "none") +
+  x_scale +
   scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
-  scale_color_manual(values = vax_colors, breaks = c("Arizona", "Colorado", "New Mexico", "Utah", "National"), name = "Geography") +
-  scale_linetype_manual(values = c("State" = "solid", "National" = "longdash"), guide = "none") +
-  labs(title = "Adults 50+ RSV Vaccination Coverage — National + AZ/CO/NM/UT",
-       x = "Week ending",
-       y = "Coverage (% Up-to-date)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(
+    title = "RSV VACCINATION",
+    subtitle = "Adults 75+ and 50─74 Years with High-Risk Conditions — National + AZ/CO/NM/UT",
+    x = "Week ending",
+    y = "Coverage (% Up-to-date)",
+    caption = "Source: NIS-FRVM (CDC)"
+  ) +
+  guides(
+  color = guide_legend(nrow = 2, byrow = TRUE, title.position = "top"),
+  linetype = guide_legend(nrow = 2, byrow = TRUE, title.position = "top")
+) +
+theme_minimal(base_size = 14) +
+theme(
+  plot.title = element_text(size = 22, face = "bold", hjust = 0),
+  plot.subtitle = element_text(size = 11, hjust = 0),
+  axis.text.x = element_text(angle = 45, hjust = 1),
+  legend.position = "top",
+  legend.direction = "horizontal",
+  legend.key.width = grid::unit(1.0, "cm"),
+  legend.key.height = grid::unit(0.5, "cm"),
+  legend.title = element_text(size = 9),
+  legend.text = element_text(size = 8),
+  plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+)
 
 print(rsv_g1)
 ```
