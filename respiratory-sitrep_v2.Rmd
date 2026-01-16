@@ -1197,6 +1197,220 @@ for (dz in diseases_to_plot) {
 
 <br><br><br>
 
+# Vaccination Coverage by Disease
+```{r timeseries-plot-vax-by-disease, echo=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(httr)
+library(readr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(janitor)
+library(scales)
+
+#All data are from the National Immunization Survey-Fall Respiratory Virus Module (NIS-FRVM), used for RespVaxView
+#Socrata CSV endpoint for the CDC dataset
+sc2_query_url <- "https://data.cdc.gov/resource/ksfb-ug5d.csv?$limit=500000"
+flu_query_url <- "https://data.cdc.gov/resource/sw5n-wg2p.csv?$limit=500000"
+rsv_query_url <- "https://data.cdc.gov/resource/qeq7-f3ir.csv?$limit=500000"
+pedsrsv_query_url <- "https://data.cdc.gov/resource/7nbz-eajm.csv?$limit=500000"
+
+
+# Optional: If you have a Socrata app token, set it here to avoid throttling:
+# app_token <- "YOUR_APP_TOKEN"
+# headers <- add_headers(`X-App-Token` = app_token)
+
+sc2 <- GET(sc2_query_url, timeout(60))
+  stop_for_status(sc2)
+flu <- GET(flu_query_url, timeout(60))
+  stop_for_status(flu)
+rsv <- GET(rsv_query_url, timeout(60))
+  stop_for_status(rsv)
+
+# Read CSVs into R
+sc2txt <- content(sc2, "text", encoding = "UTF-8")
+  sc2_vax <- read_csv(sc2txt, show_col_types = FALSE)
+flutxt <- content(flu, "text", encoding = "UTF-8")
+  flu_vax <- read_csv(flutxt, show_col_types = FALSE)
+rsvtxt <- content(rsv, "text", encoding = "UTF-8")
+  rsv_vax <- read_csv(rsvtxt, show_col_types = FALSE)
+
+# Clean and subset vaccination data
+current_vax_sc2 <- sc2_vax %>%
+  mutate(week_ending = lubridate::ymd(week_ending),
+         line_type = ifelse(geographic_name == "National", "National", "State"),
+    color_group = ifelse(geographic_name == "National", "National", geographic_name)) %>%
+  filter(vaccine == "COVID",
+           geographic_level %in% c("State","National"),
+           geographic_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
+           demographic_level == "Overall",
+           indicator_label == "Up-to-date",
+           covid_season == "2025-2026"
+         )
+
+current_vax_flu <- flu_vax %>%
+  mutate(week_ending = lubridate::ymd(week_ending),
+         line_type = ifelse(geographic_name == "National", "National", "State"),
+    color_group = ifelse(geographic_name == "National", "National", geographic_name)) %>%
+  filter(vaccine == "FLU",
+         geographic_level %in% c("State","National"),
+         geographic_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
+         demographic_level == "Overall",
+         indicator_label == "Up-to-date",
+         influenza_season == "2025-2026"
+  )
+
+current_vax_rsv <- rsv_vax %>%
+  mutate(week_ending = lubridate::ymd(week_ending),
+         line_type = ifelse(geography_name == "National", "National", "State"),
+    color_group = ifelse(geography_name == "National", "National", geography_name)) %>%
+  filter(
+    age_group == "50+ years",
+    geography_level %in% c("State", "National"),
+    geography_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
+         demographic_level == "Overall",
+         indicator_label == "Up-to-date"
+  )
+
+
+# ggplot2 line chart
+sc2_g1 <- ggplot(
+  current_vax_sc2,
+  aes(
+    x = week_ending,
+    y = estimate,
+    color = color_group,
+    linetype = line_type,
+    group = geographic_name
+  )
+) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_x_date(date_labels = "%Y-%m-%d") +
+  scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
+  scale_color_manual(
+    values = c(
+      "Arizona" = "#1b9e77",
+      "Colorado" = "#d95f02",
+      "New Mexico" = "#7570b3",
+      "Utah" = "#e7298a",
+      "National" = "black"
+    ),
+    breaks = c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
+    name = "Geography"
+  ) +
+  scale_linetype_manual(
+    values = c("State" = "solid", "National" = "longdash"),
+    guide = "none"
+  ) +
+
+  labs(
+    title = "Adult (18+) COVID Vaccination Coverage — National + AZ/CO/NM/UT",
+    x = "Week ending",
+    y = "Coverage (% Up-to-date)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(sc2_g1)
+
+flu_g1 <- ggplot(
+  current_vax_flu,
+  aes(
+    x = week_ending,
+    y = estimates,
+    color = color_group,
+    linetype = line_type,
+    group = geographic_name
+  )
+) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_x_date(date_labels = "%Y-%m-%d") +
+  scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
+  scale_color_manual(
+    values = c(
+      "Arizona" = "#1b9e77",
+      "Colorado" = "#d95f02",
+      "New Mexico" = "#7570b3",
+      "Utah" = "#e7298a",
+      "National" = "black"
+    ),
+    breaks = c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
+    name = "Geography"
+  ) +
+  scale_linetype_manual(
+    values = c("State" = "solid", "National" = "longdash"),
+    guide = "none"
+  ) +
+
+  labs(
+    title = "Adult (18+) Flu Vaccination Coverage — National + AZ/CO/NM/UT",
+    x = "Week ending",
+    y = "Coverage (% Up-to-date)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(flu_g1)
+
+rsv_g1 <- ggplot(
+  current_vax_rsv,
+  aes(
+    x = week_ending,
+    y = estimate,
+    color = color_group,
+    linetype = line_type,
+    group = geography_name
+  )
+) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_x_date(date_labels = "%Y-%m-%d") +
+  scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
+  scale_color_manual(
+    values = c(
+      "Arizona" = "#1b9e77",
+      "Colorado" = "#d95f02",
+      "New Mexico" = "#7570b3",
+      "Utah" = "#e7298a",
+      "National" = "black"
+    ),
+    breaks = c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
+    name = "Geography"
+  ) +
+  scale_linetype_manual(
+    values = c("State" = "solid", "National" = "longdash"),
+    guide = "none"
+  ) +
+
+  labs(
+    title = "Adults 50+ RSV Vaccination Coverage — National + AZ/CO/NM/UT",
+    x = "Week ending",
+    y = "Coverage (% Up-to-date)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(rsv_g1)
+```
+<div class="summary-box">
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+        <p>
+      These figures show  national and state-level trends in vaccination coverage against COVID-19, flu, and RSV based on National Immunization Survey (NIS) Fall Respiratory Virus Module data. Data are shown for the 2025-2026 respiratory virus season, beginning October 2025 and represent percentage of the (age-specific) population with 'up-to-date' vaccination against COVID-19, flu, or RSV. <br>
+      <b>
+      </b>
+ Coverage for COVID-19 and flu is shown for all individuals over 18, while RSV vaccination is shown for adults 50 years and older. State-specific estimates for pediatric RSV vaccination coverage were not available at this time.
+      </p>
+      <ul>
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<br><br><br>
+
 
 ```{r table, echo=FALSE, warning=FALSE}
 kpi_hosp <- nhsn %>%
