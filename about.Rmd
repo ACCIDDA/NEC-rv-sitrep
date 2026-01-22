@@ -1,0 +1,13 @@
+<div class="summary-box">
+  <h3>About this report:</h3>
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+      This report describes recent state-level trends in respiratory virus activity in Arizona, Colorado, New Mexico, and Utah. It presents data on three respiratory viral diseases: COVID-19, influenza (flu), and respiratory syncytial virus (RSV). Trends in emergency department visits are based on <a href="https://www.cdc.gov/nssp/php/about/index.html">National Syndromic Surveillance Program (NSSP)</a> data and provide estimates of how much symptomatic illness each virus is causing. Hospitalization trends are drawn from <a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National Healthcare Safety Network (NHSN)</a> data and estimate the burden of severe disease and impact on the healthcare system caused by each virus. Emergency department visit and hospitalization data from the previous year are also shown for  comparison.
+      <ul>
+                <li>For more information related to scenario projections for COVID, flu, and RSV, comparing outbreak trajectories under different assumptions around key features of interventions, pathogens, and populations that drive diseaseexp(-0.) dynamics, visit the <a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.</li>
+        <li>For more information on current and past season vaccination coverage for each pathogen, visit <a href="https://www.cdc.gov/respvaxview/about/index.html">RespVaxView</a>.</li>
+        <li>Note: Some current estimates, particularly for emergency department utilization, may still be impacted by holiday reporting effects.</li>
+    </ul>
+    </li>
+  </ul>
+</div>

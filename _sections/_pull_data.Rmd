@@ -1,4 +1,4 @@
-```{r pull-nhsn, include=FALSE}
+```{r pull-nhsn, cache=TRUE, include=FALSE}
 
 pull_one_nhsn <- function(disease, geo_id) {
   res <- tryCatch(
@@ -63,7 +63,7 @@ nhsn <- ensure_locations(nhsn,
 
 ```
 
-```{r pull-nssp, include=FALSE}
+```{r pull-nssp, cache=TRUE, include=FALSE}
 
 nssp_signal_map <- list(
   "influenza" = "pct_ed_visits_influenza",
@@ -122,7 +122,7 @@ nssp <- ensure_locations(nssp,
 ```
 
 
-```{r clone-hubs, include=FALSE}
+```{r clone-hubs, cache=TRUE, include=FALSE}
 flu_repo_dir <- clone_hub_repos(disease = "influenza",
                             clone_dir = getwd())
 covid_repo_dir <- clone_hub_repos(disease = "covid",
@@ -133,7 +133,7 @@ rsv_repo_dir <- clone_hub_repos(disease = "rsv",
 ```
 
 
-```{r pull-hub-forecasts, include=FALSE}
+```{r pull-hub-forecasts, cache=TRUE, include=FALSE}
 # Use loc_data (if present) to get hub 'location' codes for the selected states
 ld <- get0("loc_data", ifnotfound = NULL)
 if (!is.null(ld)) {
@@ -225,7 +225,7 @@ rsv_forecasts <- pull_hub_forecasts(
 ```
 
 
-```{r prepare-forecasts, include=FALSE}
+```{r prepare-forecasts, cache=TRUE, include=FALSE}
 
 # Combine hub ensemble forecasts you already pulled (and filtered to ensemble)
 hub_fc_raw <- bind_rows(flu_forecasts, covid_forecasts, rsv_forecasts) %>%

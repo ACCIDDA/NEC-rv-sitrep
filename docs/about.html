@@ -11,7 +11,7 @@
 
 
 
-<title>Vaccination Coverage — January 22, 2026</title>
+<title>about.knit</title>
 
 <script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -268,195 +268,47 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Vaccination Coverage — January 22,
-2026</h1>
 
 </div>
 
 
-<style>
-:root {
-  --logo-max-height: 96px;  /* default ~2x larger. change to 80px or 72px if desired */
-  --logo-top-offset: 8px;
-  --page-padding-top: 7.5rem; /* increase if logos overlap title */
-}
-
-/* Top-centered fixed logos above the title (default) */
-.rpt-top-logos {
-  position: absolute;
-  top: var(--logo-top-offset);
-  left: 50%;
-  transform: translateX(-50%);   /* center horizontally */
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  gap: 0.6rem;
-  align-items: center;
-  z-index: 35000;                /* high so it sits above theme chrome */
-  pointer-events: auto;
-  background: rgba(255,255,255,0); /* transparent */
-  padding: 6px 12px;
-  border-radius: 4px;
-}
-
-/* If you prefer top-right instead of centered, comment the lines above
-   and uncomment the block below (or replace the left/transform lines with right/none).
-.rpt-top-logos {
-  position: fixed;
-  top: var(--logo-top-offset);
-  right: 12px;
-  transform: none;
-  left: auto;
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  gap: 0.6rem;
-  align-items: center;
-  z-index: 35000;
-}
-*/
-
-/* Logo sizing */
-.rpt-top-logos img {
-  max-height: var(--logo-max-height) !important;   /* ~96px by default */
-  height: 90px !important;
-  width: auto !important;
-  display: inline-block !important;
-  max-width: none !important;
-}
-
-/* enlarge NEC (first) */
-.rpt-top-logos img:nth-child(1) { max-height: 130px !important; }
-
-/* shrink ACCIDDA (third) */
-.rpt-top-logos img:nth-child(3) { max-height: 65px !important; }
-
-/* Ensure the page content is pushed down so the title isnt overlaid */
-  .container, .main-container, .content {
-    padding-top: var(--page-padding-top) !important;
-  }
-
-/* Mobile: flow logos inline under title and shrink them */
-  @media (max-width: 700px) {
-    .rpt-top-logos {
-      position: static;
-      transform: none;
-      margin: 0.45rem 0;
-      justify-content: center;
-    }
-    .rpt-top-logos img { max-height: 56px !important; }
-    .container, .main-container, .content { padding-top: 1rem !important; }
-  }
-
-/* ========= other page styles (unchanged) ========= */
-  
-  /* headings */
-  body h1, body h2, body h3, body h4 {
-    margin-top: 2.0rem !important;
-    margin-bottom: 1.5rem !important;
-  }
-
-/* space above & below horizontal rules */
-  hr {
-    margin-top: 2.0rem !important;
-    margin-bottom: 2.5rem !important;
-    border: 0;
-    border-top: 1px solid rgba(0,0,0,0.08);
-  }
-
-/* R Markdown figure wrappers */
-  div.figure, div.plot, .knitr-plot, .figure {
-    margin-top: 2.0rem !important;
-    margin-bottom: 3.0rem !important;
-    padding-bottom: 0.5rem !important;
-  }
-
-/* images inside figure containers (ensures gap below images) */
-  div.figure img, .knitr-plot img {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 1.5rem !important;
-  }
-
-/* If facets or ggplot wrap inside .plotly or .plot, apply spacing too */
-  .plotly, .plot {
-    margin-bottom: 2.5rem !important;
-  }
-
-/* GT table wrapper (gt outputs a div.gt_table) */
-  div.gt_table, .gt_table, .gt {
-    margin-top: 1.25rem !important;
-    margin-bottom: 1.75rem !important;
-  }
-
-/* Summary box styling - high contrast and visible */
-  .summary-box, .well.summary-box, .panel.summary-box {
-    border: 2px solid #1f4e79 !important;
-    background: linear-gradient(#fbfeff, #f3f8fc) !important;
-      padding: 1.15rem 1.25rem !important;
-      border-radius: 6px !important;
-      box-shadow: 0 1px 2px rgba(31,78,121,0.08) !important;
-      margin-bottom: 1.75rem !important;
-      }
-
-/* ensure lists inside box are tight but readable */
-  .summary-box ul {
-    margin: 0;
-    padding-left: 1.15rem;
-  }
-.summary-box li {
-  margin-bottom: 0.45rem;
-  line-height: 1.35;
-}
-
-/* fallback: if bootstrap .well/panel used, boost their padding/spacing */
-  .well, .panel {
-    padding: 1rem !important;
-  }
-
-/* small screens: preserve spacing but not huge gaps */
-  @media (max-width: 700px) {
-    div.figure, .knitr-plot, .plot {
-      margin-bottom: 1.5rem !important;
-    }
-    .summary-box {
-      padding: 0.85rem !important;
-    }
-  }
-</style>
-<p><img src="vaccination_files/figure-html/timeseries-plot-vax-by-disease-1.png" width="100%" style="display: block; margin: auto;" /><img src="vaccination_files/figure-html/timeseries-plot-vax-by-disease-2.png" width="100%" style="display: block; margin: auto;" /><img src="vaccination_files/figure-html/timeseries-plot-vax-by-disease-3.png" width="100%" style="display: block; margin: auto;" /></p>
 <div class="summary-box">
+<h3>
+About this report:
+</h3>
 <ul style="list-style-type: none; padding-left: 0;">
 <li>
-<p>
-These figures show national and state-level trends in vaccination
-coverage, representing percentage of the (age-specific) population
-‘up-to-date’ for vaccination against COVID-19, flu, or RSV based on
-National Immunization Survey Fall Respiratory Virus Module (NIS-FRVM,
-previously called the Adult COVID Module or NIS-ACM) data. Data are
-shown for the 2025-2026 respiratory virus season, beginning October
-2025, and for the previous 2024-2025 season (low-opacity, dotted lines).
-NIS-FRVM estimates are derived from self-report data obtained through
-phone surveys and may differ from estimates based on other data sources.
-In addition to random error associated with taking a sample, NIS-FRVM
-data are subject to errors resulting from incomplete sample frame,
-selection bias, and errors in self-reported vaccination status.
-Estimates are weighted to selected sociodemographic characteristics of
-the U.S. population to reduce possible bias from incomplete sample frame
-and selection bias. Visit
-<a href="https://www.cdc.gov/nis/about/index.html">National Immunization
-Survey</a> for more information on survey methodology. <br><br> <b> </b>
-Coverage for COVID-19 and flu is shown for all individuals over 18,
-while RSV vaccination is shown for adults 50 years and older.
-State-specific estimates for pediatric RSV vaccination coverage are not
-available at this time. Current CDC adult RSV vaccination
-recommendations are for a single dose of RSV vaccine for all adults 75
-years and older and adults 50–74 years who are at increased risk for
-severe RSV disease. RSV vaccination coverage estimates for seasons
-before the 2025-2026 are not available at this time.
-</p>
+This report describes recent state-level trends in respiratory virus
+activity in Arizona, Colorado, New Mexico, and Utah. It presents data on
+three respiratory viral diseases: COVID-19, influenza (flu), and
+respiratory syncytial virus (RSV). Trends in emergency department visits
+are based on
+<a href="https://www.cdc.gov/nssp/php/about/index.html">National
+Syndromic Surveillance Program (NSSP)</a> data and provide estimates of
+how much symptomatic illness each virus is causing. Hospitalization
+trends are drawn from
+<a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National
+Healthcare Safety Network (NHSN)</a> data and estimate the burden of
+severe disease and impact on the healthcare system caused by each virus.
+Emergency department visit and hospitalization data from the previous
+year are also shown for comparison.
 <ul>
+<li>
+For more information related to scenario projections for COVID, flu, and
+RSV, comparing outbreak trajectories under different assumptions around
+key features of interventions, pathogens, and populations that drive
+diseaseexp(-0.) dynamics, visit the
+<a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.
+</li>
+<li>
+For more information on current and past season vaccination coverage for
+each pathogen, visit
+<a href="https://www.cdc.gov/respvaxview/about/index.html">RespVaxView</a>.
+</li>
+<li>
+Note: Some current estimates, particularly for emergency department
+utilization, may still be impacted by holiday reporting effects.
+</li>
 </ul>
 </li>
 </ul>
