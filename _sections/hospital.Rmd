@@ -1,0 +1,133 @@
+```{r timeseries-plot-nhsn-by-disease, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
+
+# Prep NHSN data
+nhsn_recent <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(target_end_date >= (max(target_end_date) - weeks(weeks_back))) %>%
+  ungroup()
+
+nhsn_last_raw <- nhsn %>%
+  group_by(geo_value, disease) %>%
+  filter(
+    target_end_date >= (max(target_end_date) - weeks(weeks_back) - years(1)) &
+      target_end_date <= (max(target_end_date) - years(1) + months(1))
+  ) %>%
+  ungroup()
+
+nhsn_last_overlay <- nhsn_last_raw %>%
+  mutate(target_end_date = target_end_date + years(1))
+
+nhsn_plot_data <- bind_rows(
+  nhsn_recent %>% mutate(season = "Current"),
+  nhsn_last_overlay %>% mutate(season = "Previous season")
+) %>%
+  mutate(
+    disease_label = toupper(disease),
+    state_label   = toupper(geo_value)
+  )
+
+hub_fc_med <- hub_fc_med %>% mutate(state_label = toupper(geo_value))
+hub_fc_pi <- hub_fc_pi %>% mutate(state_label = toupper(geo_value))
+
+
+# ----------------------------
+# Plot function: one disease per figure
+#   - color is fixed (not mapped), so no legends
+#   - forecasts are filtered by disease_label only (as in your original)
+# ----------------------------
+diseases_to_plot <- sort(unique(nhsn_plot_data$disease_label))
+disease_cols <- setNames(okabe_ito[seq_along(diseases_to_plot)], diseases_to_plot)
+
+plot_one_disease <- function(dz) {
+
+  dz_col <- disease_cols[[dz]]
+
+  ggplot(
+    nhsn_plot_data %>% filter(disease_label == dz),
+    aes(x = target_end_date, y = observation, linetype = season, alpha = season)
+  ) +
+    # NHSN lines (current + previous)
+    geom_line(linewidth = 1, color = dz_col) +
+
+    # Forecast PI ribbon
+    geom_ribbon(
+      data = hub_fc_pi %>% filter(toupper(disease_label) == dz),
+      aes(x = target_end_date, ymin = fc_lo, ymax = fc_hi),
+      inherit.aes = FALSE,
+      fill = dz_col,
+      alpha = 0.15
+    ) +
+
+    # Forecast median
+    geom_line(
+      data = hub_fc_med %>% filter(toupper(disease_label) == dz),
+      aes(x = target_end_date, y = fc_med),
+      inherit.aes = FALSE,
+      linewidth = 1,
+      linetype = "longdash",
+      color = dz_col
+    ) +
+
+    geom_vline(xintercept = today, linetype = "dotted") +
+
+    facet_wrap(~ state_label, scales = "free_y", ncol = 2) +
+
+    scale_linetype_manual(
+      name = NULL,
+      values = c("Current" = "solid", "Previous season" = "dotted"),
+      labels = c("Current" = "Current (2025–26)", "Previous season" = "Previous (2024–25)")
+    ) +
+    scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.7), guide = "none") +
+
+    labs(
+      title = dz,
+      subtitle = "Total State-level Hospital Admissions\n(with associated hub ensemble forecasts)",
+      x = NULL,
+      y = "Weekly hospital admissions",
+      caption = "Data Source: National Healthcare Safety Network (NHSN)"
+    ) +
+
+    theme_minimal(base_size = 16) +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(linewidth = 0.3),
+      panel.grid.major.y = element_line(linewidth = 0.3),
+      strip.text = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 20, face = "bold"),
+      plot.subtitle = element_text(size = 13),
+      axis.title.y = element_text(size = 14),
+      axis.text = element_text(size = 12),
+      legend.position = "top",
+      legend.text = element_text(size = 12)
+    )
+}
+
+# Print one figure per disease
+for (dz in diseases_to_plot) {
+  print(plot_one_disease(dz))
+}
+
+```
+
+
+
+<div class="summary-box">
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+      This figure shows trends in hospitalizations based on data from the National Healthcare Safety Network (NHSN). Total number of weekly hospital admissions per disease are reported and each state sub-chart has a different Y-axis scale. Hospitalizations represent an estimate of the burden of severe disease and impact on the on healthcare system for each virus. Data from the previous season, represented with dotted lines, are also shown for comparison. The dashed black vertical line represents the current report date, but the most updated available data may not be as recent.<br>
+      <b>
+      Forecasts: <br>
+      </b> In addition, we have included the most recent hub ensemble forecasts from each of the corresponding collaborative hubs: COVID-19 Forecast Hub, FluSight Forecast Hub, and RSV Forecast Hub. The hub ensembles are an average of each of the contributed models to the hub, where the dashed lines show the median estimated hospitalizations for the upcoming 1-4 weeks, and the shaded region indicates the 95% prediction intervals. Hub ensembles tend to be robust, as they incorporate insight from numerous teams and models.
+      <ul>
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<br><br><br>

@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Vaccination Coverage — January 22, 2026</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Respiratory Virus SitRep</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="hospital.html">Hospital admissions</a>
+</li>
+<li>
+  <a href="ed_visits.html">ED visits</a>
+</li>
+<li>
+  <a href="vaccination.html">Vaccination</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Vaccination Coverage — January 22,
+2026</h1>
+
+</div>
+
+
+<style>
+:root {
+  --logo-max-height: 96px;  /* default ~2x larger. change to 80px or 72px if desired */
+  --logo-top-offset: 8px;
+  --page-padding-top: 7.5rem; /* increase if logos overlap title */
+}
+
+/* Top-centered fixed logos above the title (default) */
+.rpt-top-logos {
+  position: absolute;
+  top: var(--logo-top-offset);
+  left: 50%;
+  transform: translateX(-50%);   /* center horizontally */
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 35000;                /* high so it sits above theme chrome */
+  pointer-events: auto;
+  background: rgba(255,255,255,0); /* transparent */
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+/* If you prefer top-right instead of centered, comment the lines above
+   and uncomment the block below (or replace the left/transform lines with right/none).
+.rpt-top-logos {
+  position: fixed;
+  top: var(--logo-top-offset);
+  right: 12px;
+  transform: none;
+  left: auto;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 35000;
+}
+*/
+
+/* Logo sizing */
+.rpt-top-logos img {
+  max-height: var(--logo-max-height) !important;   /* ~96px by default */
+  height: 90px !important;
+  width: auto !important;
+  display: inline-block !important;
+  max-width: none !important;
+}
+
+/* enlarge NEC (first) */
+.rpt-top-logos img:nth-child(1) { max-height: 130px !important; }
+
+/* shrink ACCIDDA (third) */
+.rpt-top-logos img:nth-child(3) { max-height: 65px !important; }
+
+/* Ensure the page content is pushed down so the title isnt overlaid */
+  .container, .main-container, .content {
+    padding-top: var(--page-padding-top) !important;
+  }
+
+/* Mobile: flow logos inline under title and shrink them */
+  @media (max-width: 700px) {
+    .rpt-top-logos {
+      position: static;
+      transform: none;
+      margin: 0.45rem 0;
+      justify-content: center;
+    }
+    .rpt-top-logos img { max-height: 56px !important; }
+    .container, .main-container, .content { padding-top: 1rem !important; }
+  }
+
+/* ========= other page styles (unchanged) ========= */
+  
+  /* headings */
+  body h1, body h2, body h3, body h4 {
+    margin-top: 2.0rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+/* space above & below horizontal rules */
+  hr {
+    margin-top: 2.0rem !important;
+    margin-bottom: 2.5rem !important;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+
+/* R Markdown figure wrappers */
+  div.figure, div.plot, .knitr-plot, .figure {
+    margin-top: 2.0rem !important;
+    margin-bottom: 3.0rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+/* images inside figure containers (ensures gap below images) */
+  div.figure img, .knitr-plot img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem !important;
+  }
+
+/* If facets or ggplot wrap inside .plotly or .plot, apply spacing too */
+  .plotly, .plot {
+    margin-bottom: 2.5rem !important;
+  }
+
+/* GT table wrapper (gt outputs a div.gt_table) */
+  div.gt_table, .gt_table, .gt {
+    margin-top: 1.25rem !important;
+    margin-bottom: 1.75rem !important;
+  }
+
+/* Summary box styling - high contrast and visible */
+  .summary-box, .well.summary-box, .panel.summary-box {
+    border: 2px solid #1f4e79 !important;
+    background: linear-gradient(#fbfeff, #f3f8fc) !important;
+      padding: 1.15rem 1.25rem !important;
+      border-radius: 6px !important;
+      box-shadow: 0 1px 2px rgba(31,78,121,0.08) !important;
+      margin-bottom: 1.75rem !important;
+      }
+
+/* ensure lists inside box are tight but readable */
+  .summary-box ul {
+    margin: 0;
+    padding-left: 1.15rem;
+  }
+.summary-box li {
+  margin-bottom: 0.45rem;
+  line-height: 1.35;
+}
+
+/* fallback: if bootstrap .well/panel used, boost their padding/spacing */
+  .well, .panel {
+    padding: 1rem !important;
+  }
+
+/* small screens: preserve spacing but not huge gaps */
+  @media (max-width: 700px) {
+    div.figure, .knitr-plot, .plot {
+      margin-bottom: 1.5rem !important;
+    }
+    .summary-box {
+      padding: 0.85rem !important;
+    }
+  }
+</style>
+<p><img src="vaccination_files/figure-html/timeseries-plot-vax-by-disease-1.png" width="100%" style="display: block; margin: auto;" /><img src="vaccination_files/figure-html/timeseries-plot-vax-by-disease-2.png" width="100%" style="display: block; margin: auto;" /><img src="vaccination_files/figure-html/timeseries-plot-vax-by-disease-3.png" width="100%" style="display: block; margin: auto;" /></p>
+<div class="summary-box">
+<ul style="list-style-type: none; padding-left: 0;">
+<li>
+<p>
+These figures show national and state-level trends in vaccination
+coverage, representing percentage of the (age-specific) population
+‘up-to-date’ for vaccination against COVID-19, flu, or RSV based on
+National Immunization Survey Fall Respiratory Virus Module (NIS-FRVM,
+previously called the Adult COVID Module or NIS-ACM) data. Data are
+shown for the 2025-2026 respiratory virus season, beginning October
+2025, and for the previous 2024-2025 season (low-opacity, dotted lines).
+NIS-FRVM estimates are derived from self-report data obtained through
+phone surveys and may differ from estimates based on other data sources.
+In addition to random error associated with taking a sample, NIS-FRVM
+data are subject to errors resulting from incomplete sample frame,
+selection bias, and errors in self-reported vaccination status.
+Estimates are weighted to selected sociodemographic characteristics of
+the U.S. population to reduce possible bias from incomplete sample frame
+and selection bias. Visit
+<a href="https://www.cdc.gov/nis/about/index.html">National Immunization
+Survey</a> for more information on survey methodology. <br><br> <b> </b>
+Coverage for COVID-19 and flu is shown for all individuals over 18,
+while RSV vaccination is shown for adults 50 years and older.
+State-specific estimates for pediatric RSV vaccination coverage are not
+available at this time. Current CDC adult RSV vaccination
+recommendations are for a single dose of RSV vaccine for all adults 75
+years and older and adults 50–74 years who are at increased risk for
+severe RSV disease. RSV vaccination coverage estimates for seasons
+before the 2025-2026 are not available at this time.
+</p>
+<ul>
+</ul>
+</li>
+</ul>
+</div>
+<p><br><br><br></p>
+<div id="vnesytllbj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#vnesytllbj table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#vnesytllbj thead, #vnesytllbj tbody, #vnesytllbj tfoot, #vnesytllbj tr, #vnesytllbj td, #vnesytllbj th {
+  border-style: none;
+}
+
+#vnesytllbj p {
+  margin: 0;
+  padding: 0;
+}
+
+#vnesytllbj .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#vnesytllbj .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#vnesytllbj .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#vnesytllbj .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#vnesytllbj .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#vnesytllbj .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#vnesytllbj .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#vnesytllbj .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#vnesytllbj .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#vnesytllbj .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#vnesytllbj .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#vnesytllbj .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#vnesytllbj .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#vnesytllbj .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#vnesytllbj .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#vnesytllbj .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#vnesytllbj .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#vnesytllbj .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#vnesytllbj .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#vnesytllbj .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#vnesytllbj .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#vnesytllbj .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#vnesytllbj .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#vnesytllbj .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#vnesytllbj .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#vnesytllbj .gt_left {
+  text-align: left;
+}
+
+#vnesytllbj .gt_center {
+  text-align: center;
+}
+
+#vnesytllbj .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#vnesytllbj .gt_font_normal {
+  font-weight: normal;
+}
+
+#vnesytllbj .gt_font_bold {
+  font-weight: bold;
+}
+
+#vnesytllbj .gt_font_italic {
+  font-style: italic;
+}
+
+#vnesytllbj .gt_super {
+  font-size: 65%;
+}
+
+#vnesytllbj .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#vnesytllbj .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#vnesytllbj .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#vnesytllbj .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#vnesytllbj .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#vnesytllbj .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#vnesytllbj .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#vnesytllbj .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#vnesytllbj div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_heading">
+      <td colspan="4" class="gt_heading gt_title gt_font_normal gt_bottom_border" style><span class='gt_from_md'><strong>Current Situation (latest available week)</strong></span></td>
+    </tr>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="State">State</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Virus">Virus</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Latest-ED-%-of-visits">Latest ED % of visits</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Latest-Hosp-Admissions-(wk)">Latest Hosp Admissions (wk)</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="State" class="gt_row gt_left">Arizona</td>
+<td headers="Virus" class="gt_row gt_left">COVID</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">0.4%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">90</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Arizona</td>
+<td headers="Virus" class="gt_row gt_left">INFLUENZA</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">2.0%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">219</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Arizona</td>
+<td headers="Virus" class="gt_row gt_left">RSV</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">0.1%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">39</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Colorado</td>
+<td headers="Virus" class="gt_row gt_left">COVID</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">0.8%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">108</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Colorado</td>
+<td headers="Virus" class="gt_row gt_left">INFLUENZA</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">4.2%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">465</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Colorado</td>
+<td headers="Virus" class="gt_row gt_left">RSV</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">0.3%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">76</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">New Mexico</td>
+<td headers="Virus" class="gt_row gt_left">COVID</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">1.1%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">63</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">New Mexico</td>
+<td headers="Virus" class="gt_row gt_left">INFLUENZA</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">4.3%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">239</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">New Mexico</td>
+<td headers="Virus" class="gt_row gt_left">RSV</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">0.1%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">20</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Utah</td>
+<td headers="Virus" class="gt_row gt_left">COVID</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">0.4%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">23</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Utah</td>
+<td headers="Virus" class="gt_row gt_left">INFLUENZA</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">4.1%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">157</td></tr>
+    <tr><td headers="State" class="gt_row gt_left">Utah</td>
+<td headers="Virus" class="gt_row gt_left">RSV</td>
+<td headers="Latest ED % of visits" class="gt_row gt_right">0.2%</td>
+<td headers="Latest Hosp Admissions (wk)" class="gt_row gt_right">16</td></tr>
+  </tbody>
+  
+  <tfoot class="gt_footnotes">
+    <tr>
+      <td class="gt_footnote" colspan="4"> <span class='gt_from_md'>Latest hosp: 2026-01-10; latest ED: 2026-01-04</span></td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+<p><br><br><br></p>
+<div class="summary-box">
+<h3>
+About this report:
+</h3>
+<ul style="list-style-type: none; padding-left: 0;">
+<li>
+This report describes recent state-level trends in respiratory virus
+activity in Arizona, Colorado, New Mexico, and Utah. It presents data on
+three respiratory viral diseases: COVID-19, influenza (flu), and
+respiratory syncytial virus (RSV). Trends in emergency department visits
+are based on
+<a href="https://www.cdc.gov/nssp/php/about/index.html">National
+Syndromic Surveillance Program (NSSP)</a> data and provide estimates of
+how much symptomatic illness each virus is causing. Hospitalization
+trends are drawn from
+<a href="https://www.cdc.gov/nhsn/about-nhsn/index.html">National
+Healthcare Safety Network (NHSN)</a> data and estimate the burden of
+severe disease and impact on the healthcare system caused by each virus.
+Emergency department visit and hospitalization data from the previous
+year are also shown for comparison.
+<ul>
+<li>
+For more information related to scenario projections for COVID, flu, and
+RSV, comparing outbreak trajectories under different assumptions around
+key features of interventions, pathogens, and populations that drive
+diseaseexp(-0.) dynamics, visit the
+<a href="https://scenariomodelinghub.org/index.html">ScenarioModelingHub</a>.
+</li>
+<li>
+For more information on current and past season vaccination coverage for
+each pathogen, visit
+<a href="https://www.cdc.gov/respvaxview/about/index.html">RespVaxView</a>.
+</li>
+<li>
+Note: Some current estimates, particularly for emergency department
+utilization, may still be impacted by holiday reporting effects.
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

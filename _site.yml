@@ -1,0 +1,19 @@
+name: "resp-sitrep"
+output_dir: "docs"
+navbar:
+  title: "Respiratory Virus SitRep"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Hospital admissions"
+      href: hospital.html
+    - text: "ED visits"
+      href: ed_visits.html
+    - text: "Vaccination"
+      href: vaccination.html
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_depth: 2
+    df_print: paged

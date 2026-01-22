@@ -1,5 +1,5 @@
 ---
-title: "Respiratory Virus Situation Report (AZ, CO, NM, UT) — `r format(Sys.Date(), '%B %d, %Y')`"
+title: "Emergency Department Visits (NSSP) — `r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
     toc: true
@@ -14,5 +14,7 @@ params:
 
 ```{r child = '_sections/_setup.Rmd'}
 ```
-```{r child = '_sections/_home.Rmd'}
+```{r child = '_sections/_pull_data.Rmd'}
+```
+```{r child = '_sections/ed_visits.Rmd'}
 ```
