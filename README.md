@@ -1,3 +1,7 @@
-**When updating:** 
+**When updating:**
+<br>
 You will need to re-render the website each time before pushing to the repo. 
-Run: 'rmarkdown::render_site()' from the repo root.
+<br>
+Run: `rmarkdown::render_site()` from the repo root.
+<br>
+If you want to edit a page of the website, edit the corresponding RMD file in the '_sections' folder.
