@@ -1,0 +1,288 @@
+
+
+```{r html-setup, echo=FALSE, results='asis'}
+
+cat('
+
+<style>
+:root {
+  --logo-max-height: 96px;  /* default ~2x larger. change to 80px or 72px if desired */
+  --logo-top-offset: 8px;
+  --page-padding-top: 7.5rem; /* increase if logos overlap title */
+}
+
+/* Top-centered fixed logos above the title (default) */
+.rpt-top-logos {
+  position: absolute;
+  top: var(--logo-top-offset);
+  left: 50%;
+  transform: translateX(-50%);   /* center horizontally */
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 35000;                /* high so it sits above theme chrome */
+  pointer-events: auto;
+  background: rgba(255,255,255,0); /* transparent */
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+/* If you prefer top-right instead of centered, comment the lines above
+   and uncomment the block below (or replace the left/transform lines with right/none).
+.rpt-top-logos {
+  position: fixed;
+  top: var(--logo-top-offset);
+  right: 12px;
+  transform: none;
+  left: auto;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.6rem;
+  align-items: center;
+  z-index: 35000;
+}
+*/
+
+/* Logo sizing */
+.rpt-top-logos img {
+  max-height: var(--logo-max-height) !important;   /* ~96px by default */
+  height: 90px !important;
+  width: auto !important;
+  display: inline-block !important;
+  max-width: none !important;
+}
+
+/* enlarge NEC (first) */
+.rpt-top-logos img:nth-child(1) { max-height: 130px !important; }
+
+/* shrink ACCIDDA (third) */
+.rpt-top-logos img:nth-child(3) { max-height: 65px !important; }
+
+/* Ensure the page content is pushed down so the title isnt overlaid */
+  .container, .main-container, .content {
+    padding-top: var(--page-padding-top) !important;
+  }
+
+/* Mobile: flow logos inline under title and shrink them */
+  @media (max-width: 700px) {
+    .rpt-top-logos {
+      position: static;
+      transform: none;
+      margin: 0.45rem 0;
+      justify-content: center;
+    }
+    .rpt-top-logos img { max-height: 56px !important; }
+    .container, .main-container, .content { padding-top: 1rem !important; }
+  }
+
+/* ========= other page styles (unchanged) ========= */
+  
+  /* headings */
+  body h1, body h2, body h3, body h4 {
+    margin-top: 2.0rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+/* space above & below horizontal rules */
+  hr {
+    margin-top: 2.0rem !important;
+    margin-bottom: 2.5rem !important;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+
+/* R Markdown figure wrappers */
+  div.figure, div.plot, .knitr-plot, .figure {
+    margin-top: 2.0rem !important;
+    margin-bottom: 3.0rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+/* images inside figure containers (ensures gap below images) */
+  div.figure img, .knitr-plot img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem !important;
+  }
+
+/* If facets or ggplot wrap inside .plotly or .plot, apply spacing too */
+  .plotly, .plot {
+    margin-bottom: 2.5rem !important;
+  }
+
+/* GT table wrapper (gt outputs a div.gt_table) */
+  div.gt_table, .gt_table, .gt {
+    margin-top: 1.25rem !important;
+    margin-bottom: 1.75rem !important;
+  }
+
+/* Summary box styling - high contrast and visible */
+  .summary-box, .well.summary-box, .panel.summary-box {
+    border: 2px solid #1f4e79 !important;
+    background: linear-gradient(#fbfeff, #f3f8fc) !important;
+      padding: 1.15rem 1.25rem !important;
+      border-radius: 6px !important;
+      box-shadow: 0 1px 2px rgba(31,78,121,0.08) !important;
+      margin-bottom: 1.75rem !important;
+      }
+
+/* ensure lists inside box are tight but readable */
+  .summary-box ul {
+    margin: 0;
+    padding-left: 1.15rem;
+  }
+.summary-box li {
+  margin-bottom: 0.45rem;
+  line-height: 1.35;
+}
+
+/* fallback: if bootstrap .well/panel used, boost their padding/spacing */
+  .well, .panel {
+    padding: 1rem !important;
+  }
+
+/* small screens: preserve spacing but not huge gaps */
+  @media (max-width: 700px) {
+    div.figure, .knitr-plot, .plot {
+      margin-bottom: 1.5rem !important;
+    }
+    .summary-box {
+      padding: 0.85rem !important;
+    }
+  }
+</style>
+  
+  ')
+
+```
+
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(
+  fig.align = "center",
+  out.width = "100%",
+  fig.retina = 2,
+  fig.width = 12, 
+  fig.height = 6
+)
+
+
+# Install & load packages 
+
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
+  remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
+}
+
+cran_pkgs <- c(
+  "tidyverse","jsonlite","epidatr","epiprocess","lubridate",
+  "readr","gt","scales","ggplot2","janitor","tidyr","stringr","maps"
+)
+
+
+to_install <- setdiff(cran_pkgs, rownames(installed.packages()))
+if (length(to_install)) install.packages(to_install, dependencies = TRUE)
+
+library(AMPHForecastSuite)
+library(tidyverse)
+library(jsonlite)
+library(epidatr)
+library(epiprocess)
+library(lubridate)
+library(readr)
+library(gt)
+library(scales)
+library(ggplot2)
+library(janitor)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(maps)
+
+# Parameters
+state_names <- params$state_names
+geo_ids <- params$geo_ids
+forecast_diseases <- params$diseases
+weeks_back <- params$weeks_back
+
+
+# Forecast date (hubverse style) = most recent Sunday, Mountain Time
+
+today <- lubridate::today(tzone = "America/Denver")
+forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
+hub_date <- as.Date(floor_date(today, unit = "week", week_start = 7) - 1 + 7)
+
+# Location reference table from package (if available)
+
+if ("loc_data" %in% data(package = "AMPHForecastSuite")$results[, "Item"]) {
+  data("loc_data", package = "AMPHForecastSuite")
+} else {
+  loc_data <- tibble(abbreviation = toupper(geo_ids),
+                     location = toupper(geo_ids),
+                     location_name = state_names)
+}
+
+```
+
+
+```{r helper-func, include=FALSE}
+
+# Ensure we have abbreviation, location, and location_name
+
+ensure_locations <- function(df, geo_ids, state_names, loc_data = NULL) {
+  df <- tibble::as_tibble(df)
+
+  # Make/standardize abbreviation
+  if (!"abbreviation" %in% names(df)) {
+    if ("geo_value" %in% names(df)) {
+      df <- dplyr::mutate(df, abbreviation = toupper(.data$geo_value))
+    } else {
+      stop("ensure_locations(): can't find 'abbreviation' or 'geo_value' to derive state code.")
+    }
+  } else {
+    df <- dplyr::mutate(df, abbreviation = toupper(.data$abbreviation))
+  }
+
+  # Join package loc_data if available
+  if (!is.null(loc_data) && all(c("abbreviation","location","location_name") %in% names(loc_data))) {
+    df <- dplyr::left_join(
+      df,
+      dplyr::select(loc_data, abbreviation, location, location_name),
+      by = "abbreviation"
+    )
+  }
+
+  # Guarantee placeholder columns exist 
+  if (!"location_name" %in% names(df)) df <- dplyr::mutate(df, location_name = NA_character_)
+  if (!"location"      %in% names(df)) df <- dplyr::mutate(df, location      = NA_character_)
+
+  # Fallback lookup from params
+  loc_lookup <- tibble::tibble(
+    abbreviation        = toupper(geo_ids),
+    location_param      = toupper(geo_ids),
+    location_name_param = state_names
+  )
+
+  df <- df %>%
+    dplyr::left_join(loc_lookup, by = "abbreviation") %>%
+    dplyr::mutate(
+      location_name = dplyr::coalesce(.data$location_name, .data$location_name_param, .data$abbreviation),
+      location      = dplyr::coalesce(.data$location,      .data$location_param,      .data$abbreviation)
+    ) %>%
+    dplyr::select(-dplyr::any_of(c("location_name_param","location_param")))
+
+  df
+}
+
+```
+
+```{r palette-setup, include=FALSE}
+# Okabe-Ito palette used across pages
+okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
+```
