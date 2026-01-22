@@ -3,14 +3,16 @@ output_dir: "docs"
 navbar:
   title: "Respiratory Virus SitRep"
   left:
-    - text: "Home"
+    - text: "State Trajectory Estimates"
       href: index.html
-    - text: "Hospital admissions"
+    - text: "Hospital Admissions"
       href: hospital.html
-    - text: "ED visits"
+    - text: "ED Visits"
       href: ed_visits.html
-    - text: "Vaccination"
+    - text: "Vaccination Rates"
       href: vaccination.html
+    - text: "About"
+      href: about.html
 output:
   html_document:
     theme: cosmo
