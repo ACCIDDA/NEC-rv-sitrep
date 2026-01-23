@@ -40,13 +40,12 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets (inserted exactly as requested)
 summary_bullets <- c(
-    "The current COVID epidemic trend (based on data reported through 1/13/2026) is **declining** for Colorado, Arizona, and New Mexico and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and New Mexico and **very low** for Arizona and Utah.",
+    "The current COVID epidemic trend (based on data reported through 1/20/2026) is **declining** for Arizona, is **likely declining** for Colorado, and is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and New Mexico and **very low** for Arizona and Utah.",
   
-  "The current flu epidemic trend (based on data reported through 1/13/2026) is **declining** for Colorado, and New Mexico, is **not changing** for Arizona, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with flu was **high** for Colorado, **moderate** for New Mexico & Utah, and **low** for Arizona.",
+  "The current flu epidemic trend (based on data reported through 1/20/2026) is **not changing** for Colorado, is **growing** for Arizona, and is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona and **moderate** for Colorado, New Mexico, and Utah.",
   
-    "The current RSV epidemic trend  (based on data reported through 1/13/2026) is **growing** for Colorado, **likely growing** for Arizona and New Mexico, and is not currently estimated for Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, New Mexico, and Utah."
+    "The current RSV epidemic trend (based on data reported through 1/20/2026) is **likely growing** for Arizona, is **growing** for Colorado, and is not currently estimated for New Mexico or Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, New Mexico, and Utah."
 )
-
 # --------------------
 
 # small CSS so each summary box visually matches the plot height and spacing
