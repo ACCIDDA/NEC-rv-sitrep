@@ -1,0 +1,16 @@
+.rpt-bottom-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid #ddd;
+}
+
+.rpt-bottom-logos img {
+  height: 70px;
+  width: auto;
+  max-height: 80px;
+}

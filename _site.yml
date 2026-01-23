@@ -1,7 +1,7 @@
 name: "resp-sitrep"
 output_dir: "docs"
 navbar:
-  title: "Respiratory Virus SitRep"
+  title: "NEC Respiratory Virus Sit Rep"
   left:
     - text: "State Trajectory Estimates"
       href: index.html
@@ -19,3 +19,4 @@ output:
     toc: true
     toc_depth: 2
     df_print: paged
+    css: styles.css

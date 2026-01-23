@@ -317,3 +317,50 @@ Coverage for COVID-19 and flu is shown for all individuals over 18, while RSV va
     </li>
   </ul>
 </div>
+
+
+<br>
+
+```{r include-logos, echo=FALSE, results='asis'}
+# Find the site/project root by walking up until _site.yml is found
+find_site_root <- function(start = getwd()) {
+  p <- normalizePath(start, mustWork = FALSE)
+  while (TRUE) {
+    if (file.exists(file.path(p, "_site.yml"))) return(p)
+    newp <- dirname(p)
+    if (identical(newp, p)) return(start) # fallback to start if not found
+    p <- newp
+  }
+}
+
+root <- find_site_root()
+
+# Logo basenames (keep these as the filenames actually in the repo)
+logo_files <- c(
+  "NEC-logo-1000.jpg",
+  "BSPH.logo.rgb_horizontal.blue.png",
+  "ACCIDDALogoSmall.png"
+)
+
+# Build full paths under <site-root>/logos
+logo_paths <- file.path(root, "logos", logo_files)
+
+# Build <img> tags using data URIs and emit as raw HTML placed at top of page
+img_tags <- vapply(logo_paths, FUN.VALUE = "", FUN = function(p) {
+  if (!file.exists(p)) {
+    message("Logo file not found (skipping): ", p)
+    return("")
+  }
+  uri <- knitr::image_uri(p)
+  alt <- tools::file_path_sans_ext(basename(p))
+  sprintf('<img src="%s" alt="%s" />', uri, alt)
+})
+img_tags <- img_tags[nzchar(img_tags)]
+
+if (length(img_tags) == 0) {
+  message("No logos emitted: check file paths under: ", root)
+} else {
+  html <- paste0('<div class="rpt-bottom-logos">', paste(img_tags, collapse = "\n"), '</div>')
+  knitr::asis_output(html)
+}
+```
