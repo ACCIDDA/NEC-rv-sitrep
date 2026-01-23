@@ -58,7 +58,8 @@ prev_vax_sc2 <- sc2_vax %>%
          geographic_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
          demographic_level == "Overall",
          indicator_label == "Up-to-date",
-         covid_season == "2024-2025"
+         covid_season == "2024-2025",
+         as.Date(week_ending) >= as.Date("2024-10-01")  # keep only rows on/after Oct 1, 2024
   ) %>%
   mutate(week_ending = week_ending + years(1))  # shift forward to align with current-season dates
 
@@ -83,7 +84,8 @@ prev_vax_flu <- flu_vax %>%
          geographic_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
          demographic_level == "Overall",
          indicator_label == "Up-to-date",
-         influenza_season == "2024-2025"
+         influenza_season == "2024-2025",
+         as.Date(week_ending) >= as.Date("2024-10-01")
   ) %>%
   mutate(week_ending = week_ending + years(1))
 
@@ -110,7 +112,8 @@ prev_vax_rsv <- rsv_vax %>%
          geography_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
          demographic_level == "Overall",
          indicator_label == "Up-to-date",
-         rsv_season == "2024-2025"
+         rsv_season == "2024-2025",
+         as.Date(week_ending) >= as.Date("2024-10-01")  # keep only rows on/after Oct 1, 2024
   ) %>%
   mutate(week_ending = week_ending + years(1))
 
@@ -273,7 +276,7 @@ rsv_g1 <- ggplot(rsv_combined,
   scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
   labs(
     title = "RSV VACCINATION",
-    subtitle = "Adults 75+ and 50─74 Years with High-Risk Conditions — National + AZ/CO/NM/UT",
+    subtitle = "Adults 75+ or 50─74 Years with High-Risk Conditions — National + AZ/CO/NM/UT",
     x = "Week ending",
     y = "Coverage (% Up-to-date)",
     caption = "Source: NIS-FRVM (CDC)"
