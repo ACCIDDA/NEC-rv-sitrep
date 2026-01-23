@@ -1,11 +1,26 @@
 ```{r include-logos, echo=FALSE, results='asis'}
+# Find the site/project root by walking up until _site.yml is found
+find_site_root <- function(start = getwd()) {
+  p <- normalizePath(start, mustWork = FALSE)
+  while (TRUE) {
+    if (file.exists(file.path(p, "_site.yml"))) return(p)
+    newp <- dirname(p)
+    if (identical(newp, p)) return(start) # fallback to start if not found
+    p <- newp
+  }
+}
 
-# Local logo paths (change to relative paths to share/publish the report)
-logo_paths <- c(
-    'logos/NEC-logo-1000.jpg',
-    'logos/BSPH.logo.rgb_horizontal.blue.png',
-    'logos/ACCIDDALogoSmall.png'
+root <- find_site_root()
+
+# Logo basenames (keep these as the filenames actually in the repo)
+logo_files <- c(
+  "NEC-logo-1000.jpg",
+  "BSPH.logo.rgb_horizontal.blue.png",
+  "ACCIDDALogoSmall.png"
 )
+
+# Build full paths under <site-root>/logos
+logo_paths <- file.path(root, "logos", logo_files)
 
 # Build <img> tags using data URIs and emit as raw HTML placed at top of page
 img_tags <- vapply(logo_paths, FUN.VALUE = "", FUN = function(p) {
@@ -20,12 +35,11 @@ img_tags <- vapply(logo_paths, FUN.VALUE = "", FUN = function(p) {
 img_tags <- img_tags[nzchar(img_tags)]
 
 if (length(img_tags) == 0) {
-  message("No logos emitted: check file paths.")
+  message("No logos emitted: check file paths under: ", root)
 } else {
   html <- paste0('<div class="rpt-top-logos">', paste(img_tags, collapse = "\n"), '</div>')
   knitr::asis_output(html)
 }
-
 ```
 
 <br>
