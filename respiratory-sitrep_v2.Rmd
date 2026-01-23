@@ -818,6 +818,7 @@ if (!is.null(ld)) {
   )
 }
 state_location_ids <- unique(state_loc_lookup$location)
+
 # Generic function: read all model files for a given forecast date
 pull_hub_forecasts <- function(repo_dir,
                                disease,
@@ -829,24 +830,59 @@ pull_hub_forecasts <- function(repo_dir,
     message("No model-output directory in: ", repo_dir)
     return(tibble::tibble())
   }
+
   model_dirs <- list.dirs(model_output_dir,
                           recursive = FALSE,
                           full.names = FALSE)
+
   purrr::map_dfr(model_dirs, function(m) {
+    # Use the forecast_date passed into the function (not a global hub_date)
     file_path <- file.path(
       model_output_dir,
       m,
-      sprintf("%s-%s.csv", hub_date, m)
+      sprintf("%s-%s.csv", as.character(forecast_date), m)
     )
-    if (!file.exists(file_path)) {
+
+    if (!is.character(file_path) || length(file_path) != 1) {
+      message("Skipping model ", m, " because file_path is not a single string: ", str(file_path))
       return(tibble::tibble())
     }
-    df <- readr::read_csv(file_path, 
-                          show_col_types = FALSE,
-                          col_types = readr::cols(
-                            output_type_id = readr::col_character(),
-                            .default = readr::col_guess()
-                          ))
+
+    if (!file.exists(file_path)) {
+      # no file for this model/date -> return empty tibble to keep map_dfr shape consistent
+      return(tibble::tibble())
+    }
+
+    # Read defensively: ensure 'location' is always read/coerced to character to avoid bind_rows type conflicts
+    df <- tryCatch(
+      {
+        readr::read_csv(
+          file_path,
+          show_col_types = FALSE,
+          col_types = readr::cols(
+            location = readr::col_character(),
+            output_type_id = readr::col_character(),
+            .default = readr::col_guess()
+          )
+        )
+      },
+      error = function(e) {
+        message("Failed to read ", file_path, ": ", conditionMessage(e))
+        return(tibble::tibble())
+      }
+    )
+
+    if (nrow(df) == 0) {
+      return(tibble::tibble())
+    }
+
+    # Defensive normalization in case the reader did not produce character
+    if ("location" %in% names(df)) {
+      df <- dplyr::mutate(df, location = as.character(.data$location))
+    } else {
+      df$location <- NA_character_
+    }
+
     # Standard hub columns: "location", "target", "type", "quantile", "value", etc.
     df %>%
       dplyr::filter(
@@ -889,7 +925,6 @@ rsv_forecasts <- pull_hub_forecasts(
   loc_ids     = state_location_ids
 ) %>%
   dplyr::filter(model == "RSVHub-ensemble")
-
 ```
 
 
@@ -1258,7 +1293,8 @@ prev_vax_sc2 <- sc2_vax %>%
          geographic_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
          demographic_level == "Overall",
          indicator_label == "Up-to-date",
-         covid_season == "2024-2025"
+         covid_season == "2024-2025",
+         as.Date(week_ending) >= as.Date("2024-10-01")  # keep only rows on/after Oct 1, 2024
   ) %>%
   mutate(week_ending = week_ending + years(1))  # shift forward to align with current-season dates
 
@@ -1283,7 +1319,8 @@ prev_vax_flu <- flu_vax %>%
          geographic_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
          demographic_level == "Overall",
          indicator_label == "Up-to-date",
-         influenza_season == "2024-2025"
+         influenza_season == "2024-2025",
+         as.Date(week_ending) >= as.Date("2024-10-01")
   ) %>%
   mutate(week_ending = week_ending + years(1))
 
@@ -1310,7 +1347,8 @@ prev_vax_rsv <- rsv_vax %>%
          geography_name %in% c("Arizona", "Colorado", "New Mexico", "Utah", "National"),
          demographic_level == "Overall",
          indicator_label == "Up-to-date",
-         rsv_season == "2024-2025"
+         rsv_season == "2024-2025",
+         as.Date(week_ending) >= as.Date("2024-10-01")  # keep only rows on/after Oct 1, 2024
   ) %>%
   mutate(week_ending = week_ending + years(1))
 
@@ -1473,7 +1511,7 @@ rsv_g1 <- ggplot(rsv_combined,
   scale_y_continuous(labels = label_number(scale = 1, suffix = "%")) +
   labs(
     title = "RSV VACCINATION",
-    subtitle = "Adults 75+ and 50─74 Years with High-Risk Conditions — National + AZ/CO/NM/UT",
+    subtitle = "Adults 75+ or 50─74 Years with High-Risk Conditions — National + AZ/CO/NM/UT",
     x = "Week ending",
     y = "Coverage (% Up-to-date)",
     caption = "Source: NIS-FRVM (CDC)"
@@ -1507,7 +1545,7 @@ print(rsv_g1)
       <br><br>
       <b>
       </b>
-Coverage for COVID-19 and flu is shown for all individuals over 18, while RSV vaccination is shown for adults 50 years and older. State-specific estimates for pediatric RSV vaccination coverage are not available at this time. Current CDC adult RSV vaccination recommendations are for a single dose of RSV vaccine for all adults 75 years and older and adults 50–74 years who are at increased risk for severe RSV disease. RSV vaccination coverage estimates for seasons before the 2025-2026 are not available at this time.
+Coverage for COVID-19 and flu is shown for all individuals over 18, while RSV vaccination is shown for adults 50 years and older. State-specific estimates for pediatric RSV vaccination coverage are not available at this time. Current CDC adult RSV vaccination recommendations are for a single dose of RSV vaccine for all adults 75 years and older and for adults 50–74 years who are at increased risk for severe RSV disease. RSV vaccination coverage estimates for seasons before the 2025-2026 are not available at this time.
       </p>
       <ul>
       </ul>
