@@ -1,6 +1,6 @@
 **When updating:**
 <br>
-You will need to re-render the website each time before pushing to the repo. 
+For the webpage to reflect changes made, you will need to re-render the website each time before pushing to the repo. 
 <br>
 Run: `rmarkdown::render_site()` from the repo root.
 <br>
