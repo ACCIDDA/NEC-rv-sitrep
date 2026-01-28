@@ -2,9 +2,11 @@
 title: "Emergency Department Visits (NSSP) — `r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
-    toc: true
-    toc_depth: 2
-    theme: cosmo
+    theme:
+      version: 5
+      bootswatch: flatly
+    toc: false
+    sanitize: false
 params:
   state_names: ["Arizona", "Colorado", "New Mexico", "Utah"]
   geo_ids: ["az", "co", "nm", "ut"]

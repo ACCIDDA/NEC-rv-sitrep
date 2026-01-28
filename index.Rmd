@@ -1,16 +1,49 @@
 ---
-title: "Respiratory Virus Situation Report (AZ, CO, NM, UT) — `r format(Sys.Date(), '%B %d, %Y')`"
+title: ""
 output:
   html_document:
-    toc: true
-    toc_depth: 2
-    theme: cosmo
+    theme:
+      version: 5
+      bootswatch: flatly
+    toc: false
+    sanitize: false
 params:
   state_names: ["Arizona", "Colorado", "New Mexico", "Utah"]
   geo_ids: ["az", "co", "nm", "ut"]
   diseases: ["influenza", "covid", "rsv"]
   weeks_back: 12
 ---
+
+<h1 class="home-title">Respiratory Virus Situation Report</h1>
+<p class="home-subtitle">Arizona • Colorado • New Mexico • Utah — updated <strong>`r format(Sys.Date(), "%B %d, %Y")`</strong></p>
+
+```{=html}
+<div class="home-grid">
+
+<a class="home-card" href="state-trajectory-estimates.html">
+  <div class="home-card-title">State Trajectory Estimates</div>
+  <div class="home-card-text">CDC epidemic trend/Rt snapshots for AZ/CO/NM/UT</div>
+</a>
+
+<a class="home-card" href="hospital-admissions.html">
+  <div class="home-card-title">Hospital Admissions</div>
+  <div class="home-card-text">State-level weekly hospitalization time series and trends</div>
+</a>
+
+<a class="home-card" href="ed-visits.html">
+  <div class="home-card-title">ED Visits</div>
+  <div class="home-card-text">Emergency department syndromic signals by state</div>
+</a>
+
+<a class="home-card" href="vaccination-rates.html">
+  <div class="home-card-title">Vaccination Rates</div>
+  <div class="home-card-text">Vaccine coverage trends and comparisons across states</div>
+</a>
+
+</div>
+```
+
+
 
 ```{r child = '_sections/_setup.Rmd'}
 ```
