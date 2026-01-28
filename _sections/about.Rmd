@@ -31,7 +31,7 @@ root <- find_site_root()
 
 # Logo basenames (keep these as the filenames actually in the repo)
 logo_files <- c(
-  "NEC-logo-1000.jpg",
+  "NEC-Logo-25.png",
   "BSPH.logo.rgb_horizontal.blue.png",
   "ACCIDDALogoSmall.png"
 )
