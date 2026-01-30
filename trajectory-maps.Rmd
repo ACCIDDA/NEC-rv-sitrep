@@ -23,3 +23,5 @@ CDC Epidemic Trends and Rt snapshots for AZ, CO, NM, and UT
 ```
 ```{r child = '_sections/trajectory-maps.Rmd'}
 ```
+```{r child = '_sections/_logos.Rmd'}
+```

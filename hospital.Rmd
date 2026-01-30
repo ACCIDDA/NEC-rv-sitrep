@@ -1,5 +1,5 @@
 ---
-title: "Hospital Admissions (NHSN) — `r format(Sys.Date(), '%B %d, %Y')`"
+title: "State-level Hospital Admissions (NHSN)"
 output:
   html_document:
     theme:
@@ -19,4 +19,6 @@ params:
 ```{r child = '_sections/_pull_data.Rmd'}
 ```
 ```{r child = '_sections/hospital.Rmd'}
+```
+```{r child = '_sections/_logos.Rmd'}
 ```

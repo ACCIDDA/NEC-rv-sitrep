@@ -1,5 +1,4 @@
 ---
-title: "About this report"
 output:
   html_document:
     theme:
@@ -16,6 +15,7 @@ params:
 
 ```{r child = '_sections/_setup.Rmd'}
 ```
-
 ```{r child = '_sections/about.Rmd'}
+```
+```{r child = '_sections/_logos.Rmd'}
 ```

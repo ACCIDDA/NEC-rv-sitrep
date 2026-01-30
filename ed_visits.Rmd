@@ -1,5 +1,5 @@
 ---
-title: "Emergency Department Visits (NSSP) — `r format(Sys.Date(), '%B %d, %Y')`"
+title: "State-level Emergency Department Visits (NSSP)"
 output:
   html_document:
     theme:
@@ -19,4 +19,6 @@ params:
 ```{r child = '_sections/_pull_data.Rmd'}
 ```
 ```{r child = '_sections/ed_visits.Rmd'}
+```
+```{r child = '_sections/_logos.Rmd'}
 ```

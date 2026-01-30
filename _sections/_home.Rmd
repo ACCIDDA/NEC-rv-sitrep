@@ -1,45 +1,28 @@
+<h1 class="home-title">Respiratory Virus Situation Report</h1>
+<p class="home-subtitle">Arizona • Colorado • New Mexico • Utah — updated <strong>`r format(Sys.Date(), "%B %d, %Y")`</strong></p>
 
+```{=html}
+<div class="home-grid">
 
-```{r include-logos, echo=FALSE, results='asis'}
-# Find the site/project root by walking up until _site.yml is found
-find_site_root <- function(start = getwd()) {
-  p <- normalizePath(start, mustWork = FALSE)
-  while (TRUE) {
-    if (file.exists(file.path(p, "_site.yml"))) return(p)
-    newp <- dirname(p)
-    if (identical(newp, p)) return(start) # fallback to start if not found
-    p <- newp
-  }
-}
+<a class="home-card" href="state-trajectory-estimates.html">
+  <div class="home-card-title">State Trajectory Estimates</div>
+  <div class="home-card-text">CDC epidemic trend/Rt snapshots for AZ/CO/NM/UT</div>
+</a>
 
-root <- find_site_root()
+<a class="home-card" href="hospital-admissions.html">
+  <div class="home-card-title">Hospital Admissions</div>
+  <div class="home-card-text">State-level weekly hospitalization time series and trends</div>
+</a>
 
-# Logo basenames (keep these as the filenames actually in the repo)
-logo_files <- c(
-  "NEC-logo-1000.jpg",
-  "BSPH.logo.rgb_horizontal.blue.png",
-  "ACCIDDALogoSmall.png"
-)
+<a class="home-card" href="ed-visits.html">
+  <div class="home-card-title">ED Visits</div>
+  <div class="home-card-text">Emergency department syndromic signals by state</div>
+</a>
 
-# Build full paths under <site-root>/logos
-logo_paths <- file.path(root, "logos", logo_files)
+<a class="home-card" href="vaccination-rates.html">
+  <div class="home-card-title">Vaccination Rates</div>
+  <div class="home-card-text">Vaccine coverage trends and comparisons across states</div>
+</a>
 
-# Build <img> tags using data URIs and emit as raw HTML placed at top of page
-img_tags <- vapply(logo_paths, FUN.VALUE = "", FUN = function(p) {
-  if (!file.exists(p)) {
-    message("Logo file not found (skipping): ", p)
-    return("")
-  }
-  uri <- knitr::image_uri(p)
-  alt <- tools::file_path_sans_ext(basename(p))
-  sprintf('<img src="%s" alt="%s" />', uri, alt)
-})
-img_tags <- img_tags[nzchar(img_tags)]
-
-if (length(img_tags) == 0) {
-  message("No logos emitted: check file paths under: ", root)
-} else {
-  html <- paste0('<div class="rpt-bottom-logos">', paste(img_tags, collapse = "\n"), '</div>')
-  knitr::asis_output(html)
-}
+</div>
 ```

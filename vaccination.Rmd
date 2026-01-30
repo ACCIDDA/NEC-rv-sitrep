@@ -1,5 +1,5 @@
 ---
-title: "Vaccination Coverage — `r format(Sys.Date(), '%B %d, %Y')`"
+title: "State-level Vaccination Coverage"
 output:
   html_document:
     theme:
@@ -17,4 +17,6 @@ params:
 ```{r child = '_sections/_setup.Rmd'}
 ```
 ```{r child = '_sections/vaccination.Rmd'}
+```
+```{r child = '_sections/_logos.Rmd'}
 ```

@@ -24,3 +24,5 @@ output:
     highlight: textmate
     toc: false
     css: styles.css
+resources:
+  - styles.css
