@@ -456,3 +456,24 @@ header, .header, .container-fluid:first-child {
   padding-bottom: 18px !important;
   font-size: 15px !important;
 }
+
+/* Add breathing room between navbar and page content */
+.navbar {
+  margin-bottom: 24px !important;
+}
+
+/* Remove fixed positioning from navbar */
+.navbar-fixed-top {
+  position: static !important;
+}
+
+
+/* Keep content below fixed navbar + add a small extra gap */
+body {
+  padding-top: 28px !important;  /* base offset for fixed navbar */
+}
+
+#header {
+  padding-top: 8px !important;  /* the extra breathing room you want */
+}
+

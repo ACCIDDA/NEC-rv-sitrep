@@ -1,4 +1,4 @@
-```{r timeseries-plot-nssp-by-disease, echo=FALSE, warning=FALSE, message=FALSE}
+```{r timeseries-plot-nssp-by-disease, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
 
 library(dplyr)
 library(ggplot2)
@@ -77,10 +77,35 @@ plot_one_disease_nssp <- function(dz) {
     )
 }
 
-# --- Print one figure per disease (each with 4 state panels)
-for (dz in diseases_to_plot) {
-  print(plot_one_disease_nssp(dz))
+# --- Tabs header (INSERT HERE, replacing the old print loop)
+cat('<ul class="nav nav-pills justify-content-center disease-tabs" role="tablist">')
+
+for (i in seq_along(diseases_to_plot)) {
+  active <- ifelse(i == 1, "active", "")
+  cat(sprintf('
+<li class="nav-item">
+  <button class="nav-link %s" data-bs-toggle="pill"
+          data-bs-target="#%s" type="button">
+    %s
+  </button>
+</li>
+', active, diseases_to_plot[i], toupper(diseases_to_plot[i])))
 }
+
+cat('</ul><div class="tab-content">')
+
+# --- Tab panes + existing plots (one per disease)
+for (i in seq_along(diseases_to_plot)) {
+  active <- ifelse(i == 1, "show active", "")
+  cat(sprintf('<div class="tab-pane fade %s" id="%s">', active, diseases_to_plot[i]))
+
+  print(plot_one_disease_nssp(diseases_to_plot[i]))
+
+  cat('</div>')
+}
+
+cat('</div>')
+
 
 ```
 

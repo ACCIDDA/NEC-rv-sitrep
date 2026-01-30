@@ -4,22 +4,22 @@
 ```{=html}
 <div class="home-grid">
 
-<a class="home-card" href="state-trajectory-estimates.html">
+<a class="home-card" href="trajectory-maps.html">
   <div class="home-card-title">State Trajectory Estimates</div>
   <div class="home-card-text">CDC epidemic trend/Rt snapshots for AZ/CO/NM/UT</div>
 </a>
 
-<a class="home-card" href="hospital-admissions.html">
+<a class="home-card" href="hospital.html">
   <div class="home-card-title">Hospital Admissions</div>
   <div class="home-card-text">State-level weekly hospitalization time series and trends</div>
 </a>
 
-<a class="home-card" href="ed-visits.html">
+<a class="home-card" href="ed_visits.html">
   <div class="home-card-title">ED Visits</div>
   <div class="home-card-text">Emergency department syndromic signals by state</div>
 </a>
 
-<a class="home-card" href="vaccination-rates.html">
+<a class="home-card" href="vaccination.html">
   <div class="home-card-title">Vaccination Rates</div>
   <div class="home-card-text">Vaccine coverage trends and comparisons across states</div>
 </a>

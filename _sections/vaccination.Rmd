@@ -1,4 +1,4 @@
-```{r timeseries-plot-vax-by-disease, echo=FALSE, warning=FALSE, message=FALSE}
+```{r timeseries-plot-vax-by-disease, echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
 knitr::opts_chunk$set(echo = TRUE)
 library(httr)
 library(readr)
@@ -203,7 +203,20 @@ theme(
   plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
 )
 
+diseases_to_plot <- c("covid","flu","rsv")  # labels for tabs only
+
+cat('<ul class="nav nav-pills justify-content-center disease-tabs" role="tablist">
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#covid" type="button">COVID</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#flu" type="button">INFLUENZA</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rsv" type="button">RSV</button></li>
+</ul>
+<div class="tab-content">')
+
+cat('<div class="tab-pane fade show active" id="covid">')
+
 print(sc2_g1)
+
+cat('</div>')
 
 # --- FLU plot (y = 'estimates' in source) ---
 flu_g1 <- ggplot(flu_combined,
@@ -251,7 +264,12 @@ theme(
   plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
 )
 
+cat('<div class="tab-pane fade" id="flu">')
+
 print(flu_g1)
+
+cat('</div>')
+
 
 # --- RSV plot ---
 rsv_g1 <- ggplot(rsv_combined,
@@ -299,18 +317,27 @@ theme(
   plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
 )
 
-print(rsv_g1)
+cat('<div class="tab-pane fade" id="rsv">')
+
+#print(rsv_g1)
+
+print("RSV vaccination coverage is not shown at this time due to an issue with the availability of state-specific coverage estimates.")
+
+cat('</div>')
+
+cat('</div>')
+
+
 ```
 
 <div class="summary-box">
   <ul style="list-style-type: none; padding-left: 0;">
     <li>
         <p>
-      These figures show  national and state-level trends in vaccination coverage, representing percentage of the (age-specific) population 'up-to-date' for vaccination against COVID-19, flu, or RSV based on National Immunization Survey Fall Respiratory Virus Module (NIS-FRVM, previously called the Adult COVID Module or NIS-ACM) data. Data are shown for the 2025-2026 respiratory virus season, beginning October 2025, and for the previous 2024-2025 season (low-opacity, dotted lines). NIS-FRVM estimates are derived from self-report data obtained through phone surveys and may differ from estimates based on other data sources. In addition to random error associated with taking a sample, NIS-FRVM data are subject to errors resulting from incomplete sample frame, selection bias, and errors in self-reported vaccination status. Estimates are weighted to selected sociodemographic characteristics of the U.S. population to reduce possible bias from incomplete sample frame and selection bias. Visit <a href="https://www.cdc.gov/nis/about/index.html">National Immunization Survey</a> for more information on survey methodology.
+      These figures show  national and state-level trends in vaccination coverage, representing percentage of the (age-specific) population 'up-to-date' for vaccination against COVID-19 or flu based on National Immunization Survey Fall Respiratory Virus Module (NIS-FRVM, previously called the Adult COVID Module or NIS-ACM) data. Data are shown for the 2025-2026 respiratory virus season, beginning October 2025, and for the previous 2024-2025 season (low-opacity, dotted lines). NIS-FRVM estimates are derived from self-report data obtained through phone surveys and may differ from estimates based on other data sources. In addition to random error associated with taking a sample, NIS-FRVM data are subject to errors resulting from incomplete sample frame, selection bias, and errors in self-reported vaccination status. Estimates are weighted to selected sociodemographic characteristics of the U.S. population to reduce possible bias from incomplete sample frame and selection bias. Visit <a href="https://www.cdc.gov/nis/about/index.html">National Immunization Survey</a> for more information on survey methodology.
       <br><br>
       <b>
       </b>
-Coverage for COVID-19 and flu is shown for all individuals over 18, while RSV vaccination is shown for adults 50 years and older. State-specific estimates for pediatric RSV vaccination coverage are not available at this time. Current CDC adult RSV vaccination recommendations are for a single dose of RSV vaccine for all adults 75 years and older and adults 50–74 years who are at increased risk for severe RSV disease. RSV vaccination coverage estimates for seasons before the 2025-2026 are not available at this time.
       </p>
       <ul>
       </ul>
