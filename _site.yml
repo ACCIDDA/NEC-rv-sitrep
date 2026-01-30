@@ -3,8 +3,10 @@ output_dir: "docs"
 navbar:
   title: "NEC Respiratory Virus Sit Rep"
   left:
+    - text: "Home"
+      href: index.html    
     - text: "State Trajectory Estimates"
-      href: index.html
+      href: trajectory-maps.html
     - text: "Hospital Admissions"
       href: hospital.html
     - text: "ED Visits"
@@ -15,8 +17,12 @@ navbar:
       href: about.html
 output:
   html_document:
-    theme: cosmo
-    toc: true
-    toc_depth: 2
-    df_print: paged
+    sanitize: false
+    theme:
+      version: 5
+      bootswatch: flatly
+    highlight: textmate
+    toc: false
     css: styles.css
+resources:
+  - styles.css

@@ -1,10 +1,12 @@
 ---
-title: "Vaccination Coverage — `r format(Sys.Date(), '%B %d, %Y')`"
+title: "State-level Vaccination Coverage"
 output:
   html_document:
-    toc: true
-    toc_depth: 2
-    theme: cosmo
+    theme:
+      version: 5
+      bootswatch: flatly
+    toc: false
+    sanitize: false
 params:
   state_names: ["Arizona", "Colorado", "New Mexico", "Utah"]
   geo_ids: ["az", "co", "nm", "ut"]
@@ -15,4 +17,6 @@ params:
 ```{r child = '_sections/_setup.Rmd'}
 ```
 ```{r child = '_sections/vaccination.Rmd'}
+```
+```{r child = '_sections/_logos.Rmd'}
 ```

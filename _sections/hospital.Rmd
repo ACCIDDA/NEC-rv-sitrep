@@ -1,10 +1,12 @@
-```{r timeseries-plot-nhsn-by-disease, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+```{r timeseries-plot-nhsn-by-disease, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE, results='asis'}
 
 library(dplyr)
 library(ggplot2)
 library(lubridate)
 
-okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
+states_to_show   <- c("Arizona", "Colorado", "New Mexico", "Utah")
+diseases_to_plot <- c("covid", "influenza", "rsv")
+
 
 # Prep NHSN data
 nhsn_recent <- nhsn %>%
@@ -108,13 +110,45 @@ plot_one_disease <- function(dz) {
     )
 }
 
-# Print one figure per disease
-for (dz in diseases_to_plot) {
-  print(plot_one_disease(dz))
+
+plots_list <- lapply(diseases_to_plot, function(disease) {
+  plot_one_disease(disease) 
+})
+
+
+if (knitr::is_html_output()) {
+
+cat('<ul class="nav nav-pills justify-content-center disease-tabs" role="tablist">')
+
+for (i in seq_along(diseases_to_plot)) {
+  active <- ifelse(i == 1, "active", "")
+  cat(sprintf('
+<li class="nav-item">
+  <button class="nav-link %s" data-bs-toggle="pill"
+          data-bs-target="#%s" type="button">
+    %s
+  </button>
+</li>
+', active, diseases_to_plot[i], toupper(diseases_to_plot[i])))
 }
 
-```
+cat('</ul><div class="tab-content">')
 
+for (i in seq_along(diseases_to_plot)) {
+  active <- ifelse(i == 1, "show active", "")
+  cat(sprintf('<div class="tab-pane fade %s" id="%s">', active, diseases_to_plot[i]))
+
+  print(plots_list[[i]])   # hospital plot
+
+  cat('</div>')
+}
+
+cat('</div>')
+
+}
+
+
+```
 
 
 <div class="summary-box">
@@ -131,50 +165,3 @@ for (dz in diseases_to_plot) {
 </div>
 
 <br><br><br>
-
-
-<br>
-
-```{r include-logos, echo=FALSE, results='asis'}
-# Find the site/project root by walking up until _site.yml is found
-find_site_root <- function(start = getwd()) {
-  p <- normalizePath(start, mustWork = FALSE)
-  while (TRUE) {
-    if (file.exists(file.path(p, "_site.yml"))) return(p)
-    newp <- dirname(p)
-    if (identical(newp, p)) return(start) # fallback to start if not found
-    p <- newp
-  }
-}
-
-root <- find_site_root()
-
-# Logo basenames (keep these as the filenames actually in the repo)
-logo_files <- c(
-  "NEC-Logo-25.png",
-  "BSPH.logo.rgb_horizontal.blue.png",
-  "ACCIDDALogoSmall.png"
-)
-
-# Build full paths under <site-root>/logos
-logo_paths <- file.path(root, "logos", logo_files)
-
-# Build <img> tags using data URIs and emit as raw HTML placed at top of page
-img_tags <- vapply(logo_paths, FUN.VALUE = "", FUN = function(p) {
-  if (!file.exists(p)) {
-    message("Logo file not found (skipping): ", p)
-    return("")
-  }
-  uri <- knitr::image_uri(p)
-  alt <- tools::file_path_sans_ext(basename(p))
-  sprintf('<img src="%s" alt="%s" />', uri, alt)
-})
-img_tags <- img_tags[nzchar(img_tags)]
-
-if (length(img_tags) == 0) {
-  message("No logos emitted: check file paths under: ", root)
-} else {
-  html <- paste0('<div class="rpt-bottom-logos">', paste(img_tags, collapse = "\n"), '</div>')
-  knitr::asis_output(html)
-}
-```
