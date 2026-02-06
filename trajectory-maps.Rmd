@@ -1,5 +1,5 @@
 ---
-title: "State-level Trajectory Estimates"
+title: "State-level Trend Estimates"
 output:
   html_document:
     theme:

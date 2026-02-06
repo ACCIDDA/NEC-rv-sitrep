@@ -1,19 +1,19 @@
 
 ```{r cdc-rt-trend-maps-with-paired-summaries, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-# Paired layout: for each disease emit a single row with a left summary box and the choropleth on the right. Uses the CDC "Epidemic Trends and Rt" dataset.
+# Uses the CDC "Epidemic Trends and Rt" dataset.
 
 # --- User config ---
 states_to_show <- c("Arizona", "Colorado", "New Mexico", "Utah")
 # keywords used to match CDC disease names; order must match summary_bullets
 diseases_to_plot <- c("covid", "influenza", "rsv")
 
-# USER-PROVIDED summary bullets (inserted exactly as requested)
+# USER-PROVIDED summary bullets 
 summary_bullets <- c(
-    "The current COVID epidemic trend (based on data reported through 1/27/2026) is **not changing** for Arizona, Colorado, and Utah and is **likely declining** for New Mexico. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and New Mexico and **very low** for Arizona and Utah.",
+    "The current COVID epidemic trend is **likely growing** for Arizona, Colorado, and New Mexico and is **not changing** for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and **very low** for Arizona, New Mexico, and Utah. (Trend assessments based on data reported through 2/3/2026)",
   
-  "The current flu epidemic trend (based on data reported through 1/27/2026) is **not changing** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with influenza was **moderate** for Colorado and Utah and **low** for Arizona and New Mexico.",
+  "The current flu epidemic trend is **growing** for Arizona, **likely growing** for New Mexico, and **not changing** Colorado and Utah. The weekly percentage of ED visits diagnosed with influenza was **moderate** for Colorado and Utah and **low** for Arizona and New Mexico. (Trend assessments based on data reported through 2/3/2026)",
   
-    "The current RSV epidemic trend (based on data reported through 1/27/2026) is **growing** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, New Mexico, and Utah."
+    "The current RSV epidemic trend is **growing** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 2/3/2026)"
 )
 # --------------------
 

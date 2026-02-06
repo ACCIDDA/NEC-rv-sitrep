@@ -18,10 +18,9 @@ body{
   -webkit-font-smoothing: antialiased;
 }
 
-/* tighter content width */
+/* content width */
 .main-container{
-  max-width: 1200px;
-  padding-top: 18px;
+  max-width: 2200px;
 }
 
 /* ===== Navbar ===== */
@@ -317,17 +316,11 @@ body {
   padding-top: 0 !important;
 }
 
-.main-container {
-  padding-top: 10px !important;
-}
 
 /* --- Fix giant top gap + sticky navbar --- */
 
 /* Ensure page doesn't reserve space at top */
 html, body { margin: 0 !important; padding: 0 !important; }
-
-/* Remove common Rmd container top padding */
-.main-container { padding-top: 12px !important; margin-top: 0 !important; }
 
 /* Pin navbar to top and remove any top margin */
 .navbar,
@@ -432,7 +425,7 @@ header, .header, .container-fluid:first-child {
 
 /* Now that navbar is fixed, add just a small offset so content doesn't hide behind it */
 .main-container {
-  padding-top: 60px !important;   /* adjust if your navbar ends up 45–55px */
+  padding-top: 24px !important;   /* adjust if your navbar ends up 45–55px */
 }
 
 /* ===== Slightly taller navbar (after we fixed it) ===== */
@@ -468,12 +461,16 @@ header, .header, .container-fluid:first-child {
 }
 
 
-/* Keep content below fixed navbar + add a small extra gap */
-body {
-  padding-top: 28px !important;  /* base offset for fixed navbar */
-}
+
 
 #header {
-  padding-top: 8px !important;  /* the extra breathing room you want */
+  padding-top: 24px !important;  /* the extra breathing room you want */
 }
 
+/* Make content/figs wider */
+@media (min-width: 1200px) {
+  .container, .main-container {
+    width: 90% !important;
+    max-width: 1400px !important;
+  }
+}
