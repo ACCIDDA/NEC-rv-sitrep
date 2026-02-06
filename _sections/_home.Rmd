@@ -5,7 +5,7 @@
 <div class="home-grid">
 
 <a class="home-card" href="trajectory-maps.html">
-  <div class="home-card-title">State Trajectory Estimates</div>
+  <div class="home-card-title">State Trend Estimates</div>
   <div class="home-card-text">CDC epidemic trend/Rt snapshots for AZ/CO/NM/UT</div>
 </a>
 

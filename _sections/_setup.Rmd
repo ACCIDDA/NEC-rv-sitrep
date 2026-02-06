@@ -212,11 +212,10 @@ forecast_diseases <- params$diseases
 weeks_back <- params$weeks_back
 
 
-# Forecast date (hubverse style) = most recent Sunday, Mountain Time
-
 today <- lubridate::today(tzone = "America/Denver")
-forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
-hub_date <- as.Date(floor_date(today, unit = "week", week_start = 7) - 1 + 7)
+data_date <- as.character(today)
+#data_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
+fc_date <- as.Date(floor_date(today, unit = "week", week_start = 7) - 1 + 7)
 
 # Location reference table from package (if available)
 

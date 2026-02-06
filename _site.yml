@@ -5,7 +5,7 @@ navbar:
   left:
     - text: "Home"
       href: index.html    
-    - text: "State Trajectory Estimates"
+    - text: "State Trend Estimates"
       href: trajectory-maps.html
     - text: "Hospital Admissions"
       href: hospital.html
