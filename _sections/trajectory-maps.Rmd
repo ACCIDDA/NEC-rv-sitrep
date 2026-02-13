@@ -9,11 +9,11 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets 
 summary_bullets <- c(
-    "The current COVID epidemic trend is **likely growing** for Arizona, Colorado, and New Mexico and is **not changing** for Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and **very low** for Arizona, New Mexico, and Utah. (Trend assessments based on data reported through 2/3/2026)",
+    "The current COVID epidemic trend is **not changing** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with COVID was **low** for Colorado and **very low** for Arizona, New Mexico, and Utah. (Trend assessments based on data reported through 2/10/2026)",
   
-  "The current flu epidemic trend is **growing** for Arizona, **likely growing** for New Mexico, and **not changing** Colorado and Utah. The weekly percentage of ED visits diagnosed with influenza was **moderate** for Colorado and Utah and **low** for Arizona and New Mexico. (Trend assessments based on data reported through 2/3/2026)",
+  "The current flu epidemic trend is **likely growing** for Colorado and New Mexico, and **not changing** Arizona and Utah. The weekly percentage of ED visits diagnosed with influenza was **moderate** for Arizona, Colorado, and Utah and **low** for New Mexico. (Trend assessments based on data reported through 2/10/2026)",
   
-    "The current RSV epidemic trend is **growing** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 2/3/2026)"
+    "The current RSV epidemic trend is **growing** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with RSV was **moderate** for Colorado and **low** for Arizona, New Mexico, and Utah. (Trend assessments based on data reported through 2/10/2026)"
 )
 # --------------------
 
