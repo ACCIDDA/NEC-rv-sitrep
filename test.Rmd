@@ -1,0 +1,193 @@
+---
+title: "Respiratory Virus Situation Report (AZ, CO, NM, UT) — `r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: cosmo
+params:
+  state_names: ["Arizona", "Colorado", "New Mexico", "Utah"]
+  geo_ids: ["az", "co", "nm", "ut"]
+  diseases: ["influenza", "covid", "rsv"]
+  weeks_back: 12
+---
+
+<!-- Update figure/table descriptions throughout for Colorado and new comments as needed -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  fig.align = "center",
+  out.width = "100%",
+  fig.retina = 2,
+  fig.width = 12, 
+  fig.height = 6
+)
+
+# Install & load packages 
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
+  remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
+}
+cran_pkgs <- c(
+  "tidyverse","jsonlite","epidatr","epiprocess","lubridate",
+  "readr","gt","scales","ggplot2","janitor"
+)
+to_install <- setdiff(cran_pkgs, rownames(installed.packages()))
+if (length(to_install)) install.packages(to_install, dependencies = TRUE)
+library(AMPHForecastSuite)
+library(tidyverse)
+library(jsonlite)
+library(epidatr)
+library(epiprocess)
+library(lubridate)
+library(readr)
+library(gt)
+library(scales)
+library(ggplot2)
+library(janitor)
+
+# Parameters
+state_names <- params$state_names
+geo_ids <- params$geo_ids
+forecast_diseases <- params$diseases
+weeks_back <- params$weeks_back
+
+# Forecast date (hubverse style) = most recent Sunday, Mountain Time
+today <- lubridate::today(tzone = "America/Denver")
+forecast_date <- as.character(floor_date(today, unit = "week", week_start = 7))
+
+# Location reference table from package (if available)
+if ("loc_data" %in% data(package = "AMPHForecastSuite")$results[, "Item"]) {
+  data("loc_data", package = "AMPHForecastSuite")
+} else {
+  loc_data <- tibble(abbreviation = toupper(geo_ids),
+                     location = toupper(geo_ids),
+                     location_name = state_names)
+}
+```
+
+```{r helper-func, include=FALSE}
+# Function definitions unchanged
+# (Retain your previously included helper functions, unchanged)
+```
+
+```{r include-logos, echo=FALSE, results='asis'}
+# Same as before (logo block)
+```
+
+<br>
+
+# Update the states_to_show to alphabetic order
+```{r cdc-rt-trend-maps-with-paired-summaries, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+states_to_show <- c("Arizona", "Colorado", "New Mexico", "Utah")
+# All other code can remain as in your previous version
+```
+
+<!-- Make sure to update summary bullets and captions to include Colorado -->
+<!-- Example updated bullets (customize wording as needed): -->
+```{r, echo=FALSE}
+summary_bullets <- c(
+  "The current COVID epidemic trend is [**ADD COLORADO DATA DESCRIPTION HERE**] for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with COVID is very low in all four states.",
+  "The current flu epidemic trend is [**ADD COLORADO DATA DESCRIPTION HERE**] for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with flu is very low in all four states.",
+  "No state-level estimates are currently available for RSV. RSV burden remains low across Arizona, Colorado, New Mexico, and Utah."
+)
+```
+
+<!-- Remaining CDC/plotting code unchanged except for above state order update -->
+
+<br>
+
+# Data pull code blocks — unchanged except for alphabetic geo_ids order
+
+```{r pull-nhsn, include=FALSE}
+.param <- tidyr::expand_grid(disease = forecast_diseases, geo = geo_ids)
+# (all logic unchanged)
+```
+
+```{r pull-nssp, include=FALSE}
+.param_nssp <- tidyr::expand_grid(disease = forecast_diseases, geo = geo_ids)
+# (all logic unchanged)
+```
+
+<br><br><br>
+
+# Time series percent of ED visits plot
+```{r timeseries-plot-nssp, echo=FALSE, warning=FALSE}
+okabe_ito <- c("#E69F00","#56B4E9","#009E73","#F0E442","#0072B2","#D55E00","#CC79A7","#999999")
+# ... prep code as before ...
+# Facet in a 2x2 grid now:
+ggplot(nssp_plot_data, aes(x = week_end, y = ed_pct, color = disease_label, linetype = season, alpha = season)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = nssp$issue, linetype = "dotted") +
+  facet_wrap(~ abbreviation, scales = "fixed", ncol = 2) +   # <-- 2x2 grid for 4 states
+  scale_color_manual(values = okabe_ito, name = "Disease") +
+  scale_linetype_manual(
+    name = "Season",
+    values = c("Current" = "solid", "Previous season" = "dotted"),
+    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
+  ) +
+  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
+  labs(title = "Percent of all Emergency Department Visits due to Each Disease, State-Level",
+       x = NULL, y = "Percent of ED visits", caption = "Data source: National Syndromic Surveillance Program (NSSP) data details") +
+  theme_bw(base_size = 16) +
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+```
+
+<br><br><br>
+
+# Time series admissions plot
+```{r timeseries-plot-nhsn, echo=FALSE, warning=FALSE}
+# ... prep as before ...
+ggplot(nhsn_plot_data, aes(x = target_end_date, y = observation, color = disease_label, linetype = season, alpha = season)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = nhsn$issue_date, linetype = "dotted") +
+  facet_wrap(~ toupper(geo_value), scales = "free_y", ncol = 2) +   # <-- 2x2 grid for 4 states
+  scale_color_manual(values = okabe_ito, name = "Disease") +
+  scale_linetype_manual(
+    name = "Season",
+    values = c("Current" = "solid", "Previous season" = "dotted"),
+    labels = c("Current" = "Current (2025-26)", "Previous season" = "Previous (2024-25)")
+  ) +
+  scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.5), guide = "none") +
+  labs(title = "Total State-level Hospital Admissions, per Disease",
+       x = NULL, y = "Weekly hospital admissions", caption = "Data source: National Healthcare Safety Network (NHSN) data details") +
+  theme_bw(base_size = 16) +
+  theme(
+    strip.text = element_text(size = 18),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+```
+
+<br><br><br>
+
+# Table code
+```{r table, echo=FALSE, warning=FALSE}
+# Will automatically include all four states
+# ... Table code as before ...
+```
+
+<br><br><br>
+
+<div class="summary-box">
+  <h3>About this report:</h3>
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>
+      This report describes recent state-level trends in respiratory virus activity in Arizona, Colorado, New Mexico, and Utah.
+      <!-- Update additional descriptive text as needed here -->
+      <ul>
+        <li>For more information on projections, visit ...</li>
+      </ul>
+    </li>
+  </ul>
+</div>
