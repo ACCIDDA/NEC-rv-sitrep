@@ -215,7 +215,8 @@ weeks_back <- params$weeks_back
 today <- lubridate::today(tzone = "America/Denver")
 data_date <- as.character(today)
 #data_date <- as.character(floor_date(today, unit = "week", week_start = 7) - 1)
-fc_date <- as.Date(floor_date(today, unit = "week", week_start = 7) - 1 + 7)
+#fc_date <- as.Date(floor_date(today, unit = "week", week_start = 7) - 1 + 7)
+fc_date <- as.Date(floor_date(today, unit = "week", week_start = 7) - 1)
 
 # Location reference table from package (if available)
 
