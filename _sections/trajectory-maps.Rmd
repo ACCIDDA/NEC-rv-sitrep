@@ -9,11 +9,11 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets 
 summary_bullets <- c(
-    "The current COVID epidemic trend is **declining** for Arizona and Colorado, **likely declinging** for New Mexico, and **not changing** for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 2/24/2026)",
+    "The current COVID epidemic trend is **declining** for Arizona, **likely declinging** for Colorado and New Mexico, and **not changing** for Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 3/3/2026)",
   
-  "The current flu epidemic trend is **declining** for Arizona and Utah and **not changing** for Colorado and New Mexico. The weekly percentage of ED visits diagnosed with influenza was **moderate** for Arizona, Colorado, and Utah and **low** for New Mexico. (Trend assessments based on data reported through 2/24/2026)",
+  "The current flu epidemic trend is **declining** for Utah, **likely declining** for Arizona, and **not changing** for Colorado and New Mexico. The weekly percentage of ED visits diagnosed with influenza was **moderate** for Arizona and Colorado and **low** for New Mexico and Utah. (Trend assessments based on data reported through 3/3/2026)",
   
-    "The current RSV epidemic trend is **growing** for Colorado, **likely growing** for New Mexico, and **not changing** for Arizona and Utah. The weekly percentage of ED visits diagnosed with RSV was **moderate** for Colorado, New Mexico, and Utah and **low** for Arizona. (Trend assessments based on data reported through 2/24/2026)"
+    "The current RSV epidemic trend is **declining** for Utah, **likely declining** for Arizona, and **not changing** for Colorado and New Mexico. The weekly percentage of ED visits diagnosed with RSV was **moderate** for Colorado and Arizona and **low** for New Mexico and Utah. (Trend assessments based on data reported through 3/3/2026)"
 )
 # --------------------
 
