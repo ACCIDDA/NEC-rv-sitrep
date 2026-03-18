@@ -24,5 +24,7 @@ output:
     highlight: textmate
     toc: false
     css: styles.css
+    includes:
+      in_header: analytics.html
 resources:
   - styles.css
