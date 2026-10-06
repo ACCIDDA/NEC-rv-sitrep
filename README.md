@@ -9,7 +9,7 @@ If you want to edit a page of the website, edit the corresponding RMD file in th
 <br><br>
 **Automation:**
 <br>
-This repository includes a GitHub Actions workflow at `/home/runner/work/NEC-rv-sitrep/NEC-rv-sitrep/.github/workflows/render-site.yml` that:
+This repository includes a GitHub Actions workflow at `.github/workflows/render-site.yml` that:
 - runs weekly,
 - can be run on demand from the Actions tab, and
 - commits rendered updates only when `docs/` changes.
