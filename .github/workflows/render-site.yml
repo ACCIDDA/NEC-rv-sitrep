@@ -27,6 +27,8 @@ jobs:
         uses: r-lib/actions/setup-pandoc@v2
 
       - name: Install dependencies
+        env:
+          GITHUB_PAT: ${{ secrets.AMPH_FORECAST_SUITE_PAT != '' && secrets.AMPH_FORECAST_SUITE_PAT || github.token }}
         run: |
           options(repos = c(CRAN = "https://packagemanager.posit.co/cran/latest"))
           cran_pkgs <- c(
@@ -35,11 +37,35 @@ jobs:
           )
           missing_cran <- setdiff(cran_pkgs, rownames(installed.packages()))
           if (length(missing_cran)) {
-            install.packages(missing_cran, dependencies = TRUE)
+            install.packages(missing_cran, dependencies = c("Depends", "Imports"))
           }
           if (!requireNamespace("remotes", quietly = TRUE)) {
             install.packages("remotes")
           }
+          github_pat <- Sys.getenv("GITHUB_PAT", unset = "")
+          if (!nzchar(github_pat)) {
+            stop("Missing GitHub token for AMPHForecastSuite installation.")
+          }
+          desc_url <- "https://api.github.com/repos/ACCIDDA/AMPH_Forecast_Suite/contents/DESCRIPTION?ref=HEAD"
+          status <- system2(
+            "curl",
+            c(
+              "-sS", "-o", "/dev/null", "-w", "%{http_code}",
+              "-H", paste("Authorization: Bearer", github_pat),
+              "-H", "Accept: application/vnd.github+json",
+              desc_url
+            ),
+            stdout = TRUE,
+            stderr = TRUE
+          )
+          status_code <- suppressWarnings(as.integer(tail(status, 1)))
+          if (is.na(status_code) || status_code < 200 || status_code >= 300) {
+            stop(
+              "GitHub API access preflight failed for ACCIDDA/AMPH_Forecast_Suite DESCRIPTION (HTTP ",
+              ifelse(is.na(status_code), "unknown", status_code), ")."
+            )
+          }
+          Sys.setenv(GITHUB_TOKEN = github_pat)
           if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
             remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
           }
