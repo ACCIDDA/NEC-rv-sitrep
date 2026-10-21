@@ -22,27 +22,96 @@ jobs:
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.6.1"
 
       - name: Set up Pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          options(repos = c(CRAN = "https://packagemanager.posit.co/cran/latest"))
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev \
+            libcairo2-dev libfreetype6-dev libharfbuzz-dev libfribidi-dev \
+            libpng-dev libjpeg-dev libtiff5-dev
+
+      - name: Install dependencies
+        env:
+          CRAN_SNAPSHOT: "2026-10-01"
+          AMPH_FORECAST_SUITE_PAT: ${{ secrets.AMPH_FORECAST_SUITE_PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          options(
+            repos = c(
+              CRAN = sprintf("https://packagemanager.posit.co/cran/__linux__/noble/%s", Sys.getenv("CRAN_SNAPSHOT"))
+            )
+          )
+
           cran_pkgs <- c(
-            "tidyverse", "jsonlite", "epidatr", "epiprocess", "lubridate",
-            "readr", "gt", "scales", "ggplot2", "janitor", "tidyr", "stringr", "maps"
+            "rmarkdown", "tidyverse", "jsonlite", "epidatr", "epiprocess",
+            "lubridate", "readr", "gt", "scales", "ggplot2", "janitor",
+            "tidyr", "stringr", "maps", "remotes"
           )
           missing_cran <- setdiff(cran_pkgs, rownames(installed.packages()))
           if (length(missing_cran)) {
-            install.packages(missing_cran, dependencies = TRUE)
+            install.packages(
+              missing_cran,
+              dependencies = c("Depends", "Imports", "LinkingTo")
+            )
           }
-          if (!requireNamespace("remotes", quietly = TRUE)) {
-            install.packages("remotes")
+
+          github_token <- Sys.getenv("AMPH_FORECAST_SUITE_PAT", unset = "")
+          if (!nzchar(github_token)) {
+            github_token <- Sys.getenv("GITHUB_TOKEN", unset = "")
           }
+
           if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
-            remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
+            tryCatch(
+              remotes::install_github(
+                "ACCIDDA/AMPH_Forecast_Suite",
+                auth_token = if (nzchar(github_token)) github_token else NULL,
+                dependencies = NA,
+                upgrade = "never"
+              ),
+              error = function(e) {
+                msg <- paste0(
+                  "Failed to install ACCIDDA/AMPH_Forecast_Suite. ",
+                  "If this repository is private, set the AMPH_FORECAST_SUITE_PAT ",
+                  "repository secret with read access to ACCIDDA/AMPH_Forecast_Suite.\n",
+                  "Original error: ", conditionMessage(e)
+                )
+                stop(msg, call. = FALSE)
+              }
+            )
           }
+        shell: Rscript {0}
+
+      - name: Verify package availability
+        run: |
+          required_namespaces <- c(
+            "rmarkdown", "AMPHForecastSuite", "tidyverse", "jsonlite", "epidatr",
+            "epiprocess", "lubridate", "readr", "gt", "scales", "ggplot2",
+            "janitor", "tidyr", "stringr", "maps"
+          )
+          missing <- required_namespaces[!vapply(required_namespaces, requireNamespace, logical(1), quietly = TRUE)]
+          if (length(missing)) {
+            stop(sprintf("Missing required R packages: %s", paste(missing, collapse = ", ")), call. = FALSE)
+          }
+        shell: Rscript {0}
+
+      - name: Dependency diagnostics
+        env:
+          CRAN_SNAPSHOT: "2026-10-01"
+        run: |
+          options(
+            repos = c(
+              CRAN = sprintf("https://packagemanager.posit.co/cran/__linux__/noble/%s", Sys.getenv("CRAN_SNAPSHOT"))
+            )
+          )
+          cat("R version:", R.version.string, "\n")
+          cat("Repository:", getOption("repos")[["CRAN"]], "\n")
+          sessionInfo()
         shell: Rscript {0}
 
       - name: Render site
