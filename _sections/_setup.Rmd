@@ -173,21 +173,7 @@ knitr::opts_chunk$set(
 )
 
 
-# Install & load packages 
-
-if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
-  remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
-}
-
-cran_pkgs <- c(
-  "tidyverse","jsonlite","epidatr","epiprocess","lubridate",
-  "readr","gt","scales","ggplot2","janitor","tidyr","stringr","maps"
-)
-
-
-to_install <- setdiff(cran_pkgs, rownames(installed.packages()))
-if (length(to_install)) install.packages(to_install, dependencies = TRUE)
+# Load packages (install in environment provisioning, not at render runtime)
 
 library(AMPHForecastSuite)
 library(tidyverse)

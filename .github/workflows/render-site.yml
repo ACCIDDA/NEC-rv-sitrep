@@ -1,0 +1,69 @@
+name: Render and publish site
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: render-site
+  cancel-in-progress: false
+
+jobs:
+  render-site:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install dependencies
+        run: |
+          options(repos = c(CRAN = "https://packagemanager.posit.co/cran/latest"))
+          cran_pkgs <- c(
+            "tidyverse", "jsonlite", "epidatr", "epiprocess", "lubridate",
+            "readr", "gt", "scales", "ggplot2", "janitor", "tidyr", "stringr", "maps"
+          )
+          missing_cran <- setdiff(cran_pkgs, rownames(installed.packages()))
+          if (length(missing_cran)) {
+            install.packages(missing_cran, dependencies = TRUE)
+          }
+          if (!requireNamespace("remotes", quietly = TRUE)) {
+            install.packages("remotes")
+          }
+          if (!requireNamespace("AMPHForecastSuite", quietly = TRUE)) {
+            remotes::install_github("ACCIDDA/AMPH_Forecast_Suite")
+          }
+        shell: Rscript {0}
+
+      - name: Render site
+        run: |
+          rmarkdown::clean_site(preview = FALSE)
+          rmarkdown::render_site()
+        shell: Rscript {0}
+
+      - name: Commit and push changes
+        run: |
+          git add -u
+          if git diff --cached --quiet; then
+            echo "No tracked changes to commit."
+            exit 0
+          fi
+          if git diff --cached --quiet -- docs/; then
+            echo "Tracked changes exist, but docs/ is unchanged. Skipping commit."
+            git reset
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Automated site render"
+          git push
