@@ -11,8 +11,8 @@ navbar:
       href: hospital.html
     - text: "ED Visits"
       href: ed_visits.html
-    - text: "Vaccination Rates"
-      href: vaccination.html
+ #   - text: "Vaccination Rates"
+#      href: vaccination.html
     - text: "About"
       href: about.html
 output:

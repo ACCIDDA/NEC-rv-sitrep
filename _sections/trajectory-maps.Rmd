@@ -9,11 +9,11 @@ diseases_to_plot <- c("covid", "influenza", "rsv")
 
 # USER-PROVIDED summary bullets 
 summary_bullets <- c(
-    "The current COVID epidemic trend is **likely growing** for Colorado, ** likely declining** for Arizona, and **declining** for New Mexico and Utah. The weekly percentage of ED visits diagnosed with COVID was **very low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 4/21/2026)",
+    "The current COVID epidemic trend is **growing** for Utah, **likely growing** for New Mexico, **not changing** for Arizona, and was not estimated for Colorado. The weekly percentage of ED visits diagnosed with COVID was **low** for Arizona, Colorado, and Utah, and **very low** for New Mexico. (Trend assessments based on data reported through 10/27/2026)",
   
-  "The current flu epidemic trend is is **declining** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with influenza was **low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 4/21/2026)",
+  "The current flu epidemic trend is **growing** for Arizona, New Mexico, and Utah, and not estimated for Colorado. The weekly percentage of ED visits diagnosed with influenza was **low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 10/27/20266)",
   
-    "The current RSV epidemic trend is **declining** for Arizona, Colorado, New Mexico, and Utah. The weekly percentage of ED visits diagnosed with RSV was **low** for Arizona, Colorado, New Mexico, and Utah. (Trend assessments based on data reported through 4/21/2026)"
+    "The current RSV epidemic trend is **likely growing** for Utah, **growing** for Arizona and New Mexico, and not estimated for Colorado. The weekly percentage of ED visits diagnosed with RSV was **very low** for Utah, and **low** for Arizona, Colorado, and New Mexico. (Trend assessments based on data reported through 10/27/2026)"
 )
 # --------------------
 

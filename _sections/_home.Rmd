@@ -19,10 +19,12 @@
   <div class="home-card-text">Emergency department syndromic signals by state</div>
 </a>
 
+<!--
 <a class="home-card" href="vaccination.html">
   <div class="home-card-title">Vaccination Rates</div>
   <div class="home-card-text">Vaccine coverage trends and comparisons across states</div>
 </a>
+-->
 
 </div>
 ```

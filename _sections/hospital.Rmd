@@ -83,7 +83,7 @@ plot_one_disease <- function(dz) {
     scale_linetype_manual(
       name = NULL,
       values = c("Current" = "solid", "Previous season" = "dotted"),
-      labels = c("Current" = "Current (2025–26)", "Previous season" = "Previous (2024–25)")
+      labels = c("Current" = "Current (2026–27)", "Previous season" = "Previous (2025–26)")
     ) +
     scale_alpha_manual(values = c("Current" = 1, "Previous season" = 0.7), guide = "none") +
 
