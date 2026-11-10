@@ -74,11 +74,10 @@ nssp_signal_map <- list(
 pull_nssp <- function(disease, geo_id) {
   sig <- nssp_signal_map[[disease]]
   res <- tryCatch(
-    epidatr::pub_covidcast(
+    epidatr::epidata_snapshot(
       source     = "nssp",
       signals    = sig,
       geo_type   = "state",
-      time_type  = "week",
       geo_values = tolower(geo_id)
     ),
     error = function(e) {
@@ -96,6 +95,10 @@ pull_nssp <- function(disease, geo_id) {
 nssp <- purrr::map2_dfr(.param_nssp$disease, .param_nssp$geo, pull_nssp) %>%
   janitor::clean_names()
 
+# API v5 names the observation period reference_time rather than time_value.
+if (!"time_value" %in% names(nssp) && "reference_time" %in% names(nssp)) {
+  nssp <- dplyr::rename(nssp, time_value = reference_time)
+}
 
 # Standardize fields for downstream use
 nssp <- nssp %>%
