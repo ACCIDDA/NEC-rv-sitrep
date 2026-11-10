@@ -71,6 +71,8 @@ nssp_signal_map <- list(
   "rsv" = "pct_ed_visits_rsv"
 )
 
+nssp_pull_errors <- character()
+
 pull_nssp <- function(disease, geo_id) {
   sig <- nssp_signal_map[[disease]]
   res <- tryCatch(
@@ -81,7 +83,12 @@ pull_nssp <- function(disease, geo_id) {
       geo_values = tolower(geo_id)
     ),
     error = function(e) {
-      message(sprintf("NSSP pull failed for %s/%s: %s", disease, geo_id, conditionMessage(e)))
+      msg <- sprintf(
+        "NSSP pull failed for %s/%s: %s",
+        disease, geo_id, conditionMessage(e)
+      )
+      nssp_pull_errors <<- c(nssp_pull_errors, msg)
+      message(msg)
       tibble::tibble()
     }
   )
@@ -95,12 +102,32 @@ pull_nssp <- function(disease, geo_id) {
 nssp <- purrr::map2_dfr(.param_nssp$disease, .param_nssp$geo, pull_nssp) %>%
   janitor::clean_names()
 
+if (length(nssp_pull_errors) > 0) {
+  stop(
+    paste(
+      "NSSP data retrieval failed; rendering cannot continue:",
+      paste(unique(nssp_pull_errors), collapse = "\n"),
+      sep = "\n"
+    )
+  )
+}
+
 # API v5 names the observation period reference_time rather than time_value.
 if (!"time_value" %in% names(nssp) && "reference_time" %in% names(nssp)) {
   nssp <- dplyr::rename(nssp, time_value = reference_time)
 }
 
 # Standardize fields for downstream use
+required_nssp_fields <- c("geo_value", "time_value", "value")
+missing_nssp_fields <- setdiff(required_nssp_fields, names(nssp))
+if (length(missing_nssp_fields) > 0) {
+  stop(
+    "NSSP response is missing required field(s): ",
+    paste(missing_nssp_fields, collapse = ", "),
+    ". Check the epidatr API response and signal availability."
+  )
+}
+
 nssp <- nssp %>%
   dplyr::mutate(
     abbreviation = toupper(geo_value),
