@@ -1,3 +1,4 @@
+
 ```{r pull-nhsn, cache=FALSE, include=FALSE}
 
 pull_one_nhsn <- function(disease, geo_id) {
@@ -5,7 +6,7 @@ pull_one_nhsn <- function(disease, geo_id) {
     AMPHForecastSuite::get_nhsn_data(
       disease = disease,
       geo_values = tolower(geo_id),
-      forecast_date = data_date,
+      forecast_date = forecast_date,
       save_data = FALSE
     ),
     error = function(e) {
@@ -23,16 +24,14 @@ pull_one_nhsn <- function(disease, geo_id) {
   res
 }
 
-
-
+.param <- tidyr::expand_grid(disease = forecast_diseases %||% forecast_diseases, geo = geo_ids)
+# Note: keep your existing expansion if it used forecast_diseases directly:
 .param <- tidyr::expand_grid(disease = forecast_diseases, geo = geo_ids)
 
 nhsn <- purrr::map2_dfr(.param$disease, .param$geo, pull_one_nhsn) %>%
   janitor::clean_names()
 
-
 # Standardize common fields if needed (align to hubverse style)
-
 if (!"target_end_date" %in% names(nhsn) && "time_value" %in% names(nhsn)) {
   nhsn <- nhsn %>% mutate(target_end_date = as.Date(time_value) + 6)
 }
@@ -43,19 +42,10 @@ if (!"geo_value" %in% names(nhsn) && "abbreviation" %in% names(nhsn)) {
   nhsn <- nhsn %>% mutate(geo_value = tolower(abbreviation))
 }
 
-# Attach location names
+# Safely get loc_data if available
+ld <- get0("loc_data", ifnotfound = NULL)
 
-if (exists("loc_data")) {
-  nhsn <- nhsn %>%
-    dplyr::left_join(
-      loc_data %>% dplyr::select(abbreviation, location, location_name),
-      by = "abbreviation"
-    )
-}
-
-ld <- get0("loc_data",
-           ifnotfound = NULL)
-
+# Let ensure_locations handle abbreviation creation and loc_data joining cleanly
 nhsn <- ensure_locations(nhsn,
                          geo_ids = geo_ids,
                          state_names = state_names,
@@ -63,7 +53,7 @@ nhsn <- ensure_locations(nhsn,
 
 ```
 
-```{r pull-nssp, cache=FALSE, include=FALSE}
+```{r pull-nssp, include=FALSE}
 
 nssp_signal_map <- list(
   "influenza" = "pct_ed_visits_influenza",
@@ -71,24 +61,18 @@ nssp_signal_map <- list(
   "rsv" = "pct_ed_visits_rsv"
 )
 
-nssp_pull_errors <- character()
-
 pull_nssp <- function(disease, geo_id) {
   sig <- nssp_signal_map[[disease]]
   res <- tryCatch(
-    epidatr::epidata_snapshot(
+    epidatr::pub_covidcast(
       source     = "nssp",
       signals    = sig,
       geo_type   = "state",
+      time_type  = "week",
       geo_values = tolower(geo_id)
     ),
     error = function(e) {
-      msg <- sprintf(
-        "NSSP pull failed for %s/%s: %s",
-        disease, geo_id, conditionMessage(e)
-      )
-      nssp_pull_errors <<- c(nssp_pull_errors, msg)
-      message(msg)
+      message(sprintf("NSSP pull failed for %s/%s: %s", disease, geo_id, conditionMessage(e)))
       tibble::tibble()
     }
   )
@@ -102,32 +86,8 @@ pull_nssp <- function(disease, geo_id) {
 nssp <- purrr::map2_dfr(.param_nssp$disease, .param_nssp$geo, pull_nssp) %>%
   janitor::clean_names()
 
-if (length(nssp_pull_errors) > 0) {
-  stop(
-    paste(
-      "NSSP data retrieval failed; rendering cannot continue:",
-      paste(unique(nssp_pull_errors), collapse = "\n"),
-      sep = "\n"
-    )
-  )
-}
-
-# API v5 names the observation period reference_time rather than time_value.
-if (!"time_value" %in% names(nssp) && "reference_time" %in% names(nssp)) {
-  nssp <- dplyr::rename(nssp, time_value = reference_time)
-}
 
 # Standardize fields for downstream use
-required_nssp_fields <- c("geo_value", "time_value", "value")
-missing_nssp_fields <- setdiff(required_nssp_fields, names(nssp))
-if (length(missing_nssp_fields) > 0) {
-  stop(
-    "NSSP response is missing required field(s): ",
-    paste(missing_nssp_fields, collapse = ", "),
-    ". Check the epidatr API response and signal availability."
-  )
-}
-
 nssp <- nssp %>%
   dplyr::mutate(
     abbreviation = toupper(geo_value),
@@ -152,7 +112,7 @@ nssp <- ensure_locations(nssp,
 ```
 
 
-```{r clone-hubs, cache=FALSE, include=FALSE}
+```{r clone-hubs, include=FALSE}
 flu_repo_dir <- clone_hub_repos(disease = "influenza",
                             clone_dir = getwd())
 covid_repo_dir <- clone_hub_repos(disease = "covid",
@@ -163,7 +123,7 @@ rsv_repo_dir <- clone_hub_repos(disease = "rsv",
 ```
 
 
-```{r pull-hub-forecasts, cache=FALSE, include=FALSE}
+```{r pull-hub-forecasts, include=FALSE}
 # Use loc_data (if present) to get hub 'location' codes for the selected states
 ld <- get0("loc_data", ifnotfound = NULL)
 if (!is.null(ld)) {
@@ -179,25 +139,30 @@ if (!is.null(ld)) {
   )
 }
 state_location_ids <- unique(state_loc_lookup$location)
+
 # Generic function: read all model files for a given forecast date
 pull_hub_forecasts <- function(repo_dir,
                                disease,
                                hub_name,
-                               forecast_date,
+                               target_date,
                                loc_ids) {
   model_output_dir <- file.path(repo_dir, "model-output")
   if (!dir.exists(model_output_dir)) {
     message("No model-output directory in: ", repo_dir)
     return(tibble::tibble())
   }
+  
   model_dirs <- list.dirs(model_output_dir,
                           recursive = FALSE,
                           full.names = FALSE)
+  
+  if (length(model_dirs) == 0) return(tibble::tibble())
+
   purrr::map_dfr(model_dirs, function(m) {
     file_path <- file.path(
       model_output_dir,
       m,
-      sprintf("%s-%s.csv", forecast_date, m)
+      sprintf("%s-%s.csv", target_date, m)
     )
     if (!file.exists(file_path)) {
       return(tibble::tibble())
@@ -208,6 +173,8 @@ pull_hub_forecasts <- function(repo_dir,
                             output_type_id = readr::col_character(),
                             .default = readr::col_guess()
                           ))
+    if (nrow(df) == 0) return(tibble::tibble())
+    
     # Standard hub columns: "location", "target", "type", "quantile", "value", etc.
     df %>%
       dplyr::filter(
@@ -219,99 +186,112 @@ pull_hub_forecasts <- function(repo_dir,
         disease = disease,
         hub     = hub_name,
         location = as.character(location),
-        forecast_date = as.Date(forecast_date)
+        forecast_date = as.Date(target_date)
       )
   })
 }
 
-# Pull forecasts from each hub repo for the selected forecast_date
+# Pull forecasts using forecast_date instead of hub_date (matching Hubverse file naming)
 flu_forecasts <- pull_hub_forecasts(
-  repo_dir    = flu_repo_dir,
-  disease     = "influenza",
-  hub_name    = "FluSight",
-  forecast_date = fc_date,
-  loc_ids     = state_location_ids
-) %>%
-  dplyr::filter(model == "FluSight-ensemble")
+  repo_dir      = flu_repo_dir,
+  disease       = "influenza",
+  hub_name      = "FluSight",
+  target_date   = forecast_date,
+  loc_ids       = state_location_ids
+)
+if (nrow(flu_forecasts) > 0 && "model" %in% names(flu_forecasts)) {
+  flu_forecasts <- flu_forecasts %>% dplyr::filter(model == "FluSight-ensemble")
+}
 
 covid_forecasts <- pull_hub_forecasts(
-  repo_dir    = covid_repo_dir,
-  disease     = "covid",
-  hub_name    = "COVID-19 Forecast Hub",
-  forecast_date = fc_date,
-  loc_ids     = state_location_ids
-) %>%
-  dplyr::filter(model == "CovidHub-ensemble")
+  repo_dir      = covid_repo_dir,
+  disease       = "covid",
+  hub_name      = "COVID-19 Forecast Hub",
+  target_date   = forecast_date,
+  loc_ids       = state_location_ids
+)
+if (nrow(covid_forecasts) > 5 && "model" %in% names(covid_forecasts)) {
+  covid_forecasts <- covid_forecasts %>% dplyr::filter(model == "CovidHub-ensemble")
+}
 
 rsv_forecasts <- pull_hub_forecasts(
-  repo_dir    = rsv_repo_dir,
-  disease     = "rsv",
-  hub_name    = "RSV Forecast Hub",
-  forecast_date = fc_date,
-  loc_ids     = state_location_ids
-) %>%
-  dplyr::filter(model == "RSVHub-ensemble")
+  repo_dir      = rsv_repo_dir,
+  disease       = "rsv",
+  hub_name      = "RSV Forecast Hub",
+  target_date   = forecast_date,
+  loc_ids       = state_location_ids
+)
+if (nrow(rsv_forecasts) > 0 && "model" %in% names(rsv_forecasts)) {
+  # Change "RSVHub-ensemble" to match the actual ensemble model folder name in the RSV repo if different
+  rsv_forecasts <- rsv_forecasts %>% dplyr::filter(model == "RSVHub-ensemble")
+}
 
 ```
 
 
-```{r prepare-forecasts, cache=FALSE, include=FALSE}
+```{r prepare-forecasts, include=FALSE}
 
-# Combine hub ensemble forecasts you already pulled (and filtered to ensemble)
-hub_fc_raw <- bind_rows(flu_forecasts, covid_forecasts, rsv_forecasts) %>%
-  mutate(
-    disease_label = toupper(disease),
-    location = as.character(location)
-  ) %>%
-  left_join(
-    state_loc_lookup %>%
-      transmute(
-        location  = as.character(location),   # hub location (FIPS)
-        geo_value = toupper(abbreviation)      # NHSN geo_value
-      ),
-    by = "location"
-  )
+# Combine hub ensemble forecasts
+hub_fc_raw <- bind_rows(flu_forecasts, covid_forecasts, rsv_forecasts)
 
-
-# Build target_end_date for plotting (prefer column if it exists; else parse from `target`)
-hub_fc_raw <- hub_fc_raw %>%
-  mutate(
-    target_end_date = dplyr::case_when(
-      "target_end_date" %in% names(.) ~ as.Date(.data$target_end_date),
-      TRUE ~ as.Date(str_extract(.data$target, "\\d{4}-\\d{2}-\\d{2}"))
+# Safety check: if no forecasts were pulled, create empty placeholder structures
+if (nrow(hub_fc_raw) == 0) {
+  hub_fc_med <- tibble::tibble(geo_value = character(), target_end_date = as.Date(character()), disease_label = character(), fc_med = numeric())
+  hub_fc_pi  <- tibble::tibble(geo_value = character(), target_end_date = as.Date(character()), disease_label = character(), fc_lo = numeric(), fc_hi = numeric())
+} else {
+  
+  hub_fc_raw <- hub_fc_raw %>%
+    mutate(
+      disease_label = toupper(disease),
+      location = as.character(location)
+    ) %>%
+    left_join(
+      state_loc_lookup %>%
+        transmute(
+          location  = as.character(location),   
+          geo_value = toupper(abbreviation)      
+        ),
+      by = "location"
     )
-  ) %>%
-  filter(!is.na(.data$target_end_date),
-         horizon >= 0)
 
-# Keep only quantiles (typical hub format)
-hub_fc_q <- hub_fc_raw %>%
-  filter(.data$output_type == "quantile") %>%
-  mutate(output_type_id = as.numeric(.data$output_type_id))
+  # Build target_end_date for plotting
+  hub_fc_raw <- hub_fc_raw %>%
+    mutate(
+      target_end_date = dplyr::case_when(
+        "target_end_date" %in% names(.) ~ as.Date(.data$target_end_date),
+        TRUE ~ as.Date(str_extract(.data$target, "\\d{4}-\\d{2}-\\d{2}"))
+      )
+    ) %>%
+    filter(!is.na(.data$target_end_date))
 
-# Median line
-hub_fc_med <- hub_fc_q %>%
-  filter(output_type_id == 0.5) %>%
-  transmute(
-    geo_value,
-    target_end_date,
-    disease_label,
-    fc_med = value
-  )
+  # Keep only quantiles
+  hub_fc_q <- hub_fc_raw %>%
+    filter(.data$output_type == "quantile") %>%
+    mutate(output_type_id = as.numeric(.data$output_type_id))
 
-# Ribbon interval (edit quantiles if you want 95% etc.)
-hub_fc_pi <- hub_fc_q %>%
-  filter(output_type_id %in% c(0.25, 0.75)) %>%
-  transmute(
-    geo_value,
-    target_end_date,
-    disease_label,
-    output_type_id,
-    value
-  ) %>%
-  tidyr::pivot_wider(names_from =output_type_id, values_from = value) %>%
-  rename(fc_lo = `0.25`, fc_hi = `0.75`) 
+  # Median line
+  hub_fc_med <- hub_fc_q %>%
+    filter(output_type_id == 0.5) %>%
+    transmute(
+      geo_value,
+      target_end_date,
+      disease_label,
+      fc_med = value
+    )
 
+  # Ribbon interval
+  hub_fc_pi <- hub_fc_q %>%
+    filter(output_type_id %in% c(0.25, 0.75)) %>%
+    transmute(
+      geo_value,
+      target_end_date,
+      disease_label,
+      output_type_id,
+      value
+    ) %>%
+    tidyr::pivot_wider(names_from = output_type_id, values_from = value) %>%
+    rename(fc_lo = `0.25`, fc_hi = `0.75`) 
+}
 
 ```
 
