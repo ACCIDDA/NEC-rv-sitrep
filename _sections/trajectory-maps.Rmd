@@ -58,41 +58,62 @@ cat("<style>
 </style>", sep = "")
 
 # --- Download & prepare CDC dataset ---
-cdc_csv_url <- "https://data.cdc.gov/api/views/5dqz-y4ea/rows.csv?accessType=DOWNLOAD"
-rt_raw <- read_csv(cdc_csv_url, col_types = cols(.default = "c"))
 
-# detect the most likely date column name
-possible_date_names <- c("week_end", "week_ending", "week_end_date", "week", "week_end_dt",
-                         "date", "as_of", "issue_date", "report_date", "time_value")
-date_col <- NULL
-for (p in possible_date_names) {
-  m <- grep(p, tolower(names(rt_raw)), value = TRUE)
-  if (length(m) > 0) { date_col <- m[1]; break }
+rt_raw <- readr::read_csv(
+  "https://data.cdc.gov/resource/ahfs-x44r.csv?$limit=5000000",
+  show_col_types = FALSE
+)
+
+rt_raw <- rt_raw %>%
+  mutate(
+    origin_date = as.Date(origin_date),
+    target_date = as.Date(target_date)
+  )
+
+latest_origin <- max(rt_raw$origin_date, na.rm = TRUE)
+
+rt_raw <- rt_raw %>%
+  filter(origin_date == latest_origin)
+
+if ("estimate_level" %in% names(rt_raw)) {
+
+  state_levels <- tolower(unique(rt_raw$estimate_level))
+
+  if ("state" %in% state_levels) {
+    rt_raw <- rt_raw %>%
+      filter(tolower(estimate_level) == "state")
+  }
 }
-if (is.null(date_col)) stop("Could not detect date column. Run names(rt_raw) to inspect columns.")
 
-# parse dates robustly
-rt_raw[[date_col]] <- parse_date_time(rt_raw[[date_col]],
-                                      orders = c("Y-m-d", "m/d/Y", "Ymd", "m/d/Y HMS", "Y-m-d HMS"),
-                                      exact = FALSE)
-rt_raw[[date_col]] <- as.Date(rt_raw[[date_col]])
-
-# detect state / disease / trend columns
-state_col <- names(rt_raw)[which(grepl("^state$|location|geo|jurisdiction", tolower(names(rt_raw))))][1]
-disease_col_candidates <- names(rt_raw)[which(grepl("disease|virus|pathogen|syndrom", tolower(names(rt_raw))))]
-disease_col <- if (length(disease_col_candidates) > 0) disease_col_candidates[1] else NA_character_
-trend_col_candidates <- names(rt_raw)[which(grepl("trend|category|status|epidemic", tolower(names(rt_raw))))]
-trend_col <- if (length(trend_col_candidates) > 0) trend_col_candidates[1] else NA_character_
-
-if (is.na(state_col) || is.null(state_col)) stop("Could not detect state column. Run names(rt_raw).")
-
-# normalize columns
 rt_df <- rt_raw %>%
-  rename(rt_date = !!sym(date_col),
-         rt_state = !!sym(state_col)) %>%
-  mutate(disease_raw = if (!is.na(disease_col)) .data[[disease_col]] else NA_character_,
-         trend_raw   = if (!is.na(trend_col))  .data[[trend_col]]  else NA_character_)
+  transmute(
+    rt_date     = origin_date,
+    rt_state    = state_name,
+    disease_raw = disease,
+    trend_raw   = category,
+    p_growing   = p_growing,
+    median      = median,
+    lower_95    = lower_95,
+    upper_95    = upper_95
+  )
 
+disease_lookup <- c(
+  covid     = "COVID-19",
+  influenza = "Influenza",
+  rsv       = "RSV"
+)
+
+rt_df <- rt_raw %>%
+  transmute(
+    rt_date     = origin_date,
+    rt_state    = state_name,
+    disease_raw = disease,
+    trend_raw   = category,
+    p_growing   = p_growing,
+    median      = median,
+    lower_95    = lower_95,
+    upper_95    = upper_95
+  )
 # helper: canonical levels and normalizer
 desired_levels <- c("Growing","Likely Growing","Not Changing","Likely Declining","Declining","Not Estimated")
 normalize_trend <- function(x) {
@@ -135,22 +156,20 @@ get_state_abbrev <- function(x) {
   }, USE.NAMES = FALSE)
 }
 
+disease_lookup <- c(
+  covid = "COVID-19",
+  influenza = "Influenza",
+  rsv = "RSV"
+)
+
 # plotting helper that uses the most recent week for the given disease
 plot_for_disease <- function(keyword, requested_states) {
-  # select disease rows (with alias fallback)
-  if (!all(is.na(rt_df$disease_raw))) {
-    disease_rows <- rt_df %>% filter(!is.na(disease_raw) & str_detect(tolower(disease_raw), fixed(tolower(keyword))))
-    if (nrow(disease_rows) == 0) {
-      alias_map <- list(covid = c("covid","sars-cov-2","covid-19","covid19"),
-                        influenza = c("influenza","flu"),
-                        rsv = c("rsv"))
-      aliases <- alias_map[[keyword]]
-      if (!is.null(aliases)) disease_rows <- rt_df %>% filter(!is.na(disease_raw) & sapply(tolower(disease_raw), function(x) any(str_detect(x, paste(aliases, collapse="|")))))
-    }
-  } else {
-    disease_rows <- rt_df
-  }
-
+ 
+  disease_rows <- rt_df %>%
+  filter(
+    disease_raw == disease_lookup[[keyword]]
+  )
+  
   # get latest date for this disease across dataset
   if (nrow(disease_rows) == 0 || all(is.na(disease_rows$rt_date))) {
     latest_date <- NA
@@ -253,7 +272,7 @@ plot_for_disease <- function(keyword, requested_states) {
     labs(title = toupper(keyword),
          subtitle = paste0("Selected states: ", paste(requested_states, collapse = ", "),
                            " | Latest dataset date: ", ifelse(is.na(latest_date), "Not available", format(latest_date, "%Y-%m-%d"))),
-         caption = "Source: CDC 'Epidemic Trends and Rt' (data.cdc.gov, dataset 5dqz-y4ea)") +
+         caption = "Source: CDC 'Epidemic Trends and Rt' (data.cdc.gov, dataset ahfs-x44r") +
     theme(axis.title = element_blank(), axis.text = element_blank(), panel.grid = element_blank(), legend.position = "right")
 
   p
