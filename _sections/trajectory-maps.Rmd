@@ -60,7 +60,7 @@ cat("<style>
 # --- Download & prepare CDC dataset ---
 
 rt_raw <- readr::read_csv(
-  "https://data.cdc.gov/resource/ahfs-x44r.csv?$limit=5000000",
+  "https://data.cdc.gov/resource/ahfs-x44r.csv?$limit=500000",
   show_col_types = FALSE
 )
 
