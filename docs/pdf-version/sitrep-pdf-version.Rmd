@@ -818,30 +818,25 @@ if (!is.null(ld)) {
   )
 }
 state_location_ids <- unique(state_loc_lookup$location)
-
 # Generic function: read all model files for a given forecast date
 pull_hub_forecasts <- function(repo_dir,
                                disease,
                                hub_name,
-                               target_date,
+                               forecast_date,
                                loc_ids) {
   model_output_dir <- file.path(repo_dir, "model-output")
   if (!dir.exists(model_output_dir)) {
     message("No model-output directory in: ", repo_dir)
     return(tibble::tibble())
   }
-  
   model_dirs <- list.dirs(model_output_dir,
                           recursive = FALSE,
                           full.names = FALSE)
-  
-  if (length(model_dirs) == 0) return(tibble::tibble())
-
   purrr::map_dfr(model_dirs, function(m) {
     file_path <- file.path(
       model_output_dir,
       m,
-      sprintf("%s-%s.csv", target_date, m)
+      sprintf("%s-%s.csv", hub_date, m)
     )
     if (!file.exists(file_path)) {
       return(tibble::tibble())
@@ -852,8 +847,6 @@ pull_hub_forecasts <- function(repo_dir,
                             output_type_id = readr::col_character(),
                             .default = readr::col_guess()
                           ))
-    if (nrow(df) == 0) return(tibble::tibble())
-    
     # Standard hub columns: "location", "target", "type", "quantile", "value", etc.
     df %>%
       dplyr::filter(
@@ -865,45 +858,38 @@ pull_hub_forecasts <- function(repo_dir,
         disease = disease,
         hub     = hub_name,
         location = as.character(location),
-        forecast_date = as.Date(target_date)
+        forecast_date = as.Date(forecast_date)
       )
   })
 }
 
-# Pull forecasts using forecast_date instead of hub_date (matching Hubverse file naming)
+# Pull forecasts from each hub repo for the selected forecast_date
 flu_forecasts <- pull_hub_forecasts(
-  repo_dir      = flu_repo_dir,
-  disease       = "influenza",
-  hub_name      = "FluSight",
-  target_date   = forecast_date,
-  loc_ids       = state_location_ids
-)
-if (nrow(flu_forecasts) > 0 && "model" %in% names(flu_forecasts)) {
-  flu_forecasts <- flu_forecasts %>% dplyr::filter(model == "FluSight-ensemble")
-}
+  repo_dir    = flu_repo_dir,
+  disease     = "influenza",
+  hub_name    = "FluSight",
+  forecast_date = hub_date,
+  loc_ids     = state_location_ids
+) %>%
+  dplyr::filter(model == "FluSight-ensemble")
 
 covid_forecasts <- pull_hub_forecasts(
-  repo_dir      = covid_repo_dir,
-  disease       = "covid",
-  hub_name      = "COVID-19 Forecast Hub",
-  target_date   = forecast_date,
-  loc_ids       = state_location_ids
-)
-if (nrow(covid_forecasts) > 5 && "model" %in% names(covid_forecasts)) {
-  covid_forecasts <- covid_forecasts %>% dplyr::filter(model == "CovidHub-ensemble")
-}
+  repo_dir    = covid_repo_dir,
+  disease     = "covid",
+  hub_name    = "COVID-19 Forecast Hub",
+  forecast_date = hub_date,
+  loc_ids     = state_location_ids
+) %>%
+  dplyr::filter(model == "CovidHub-ensemble")
 
 rsv_forecasts <- pull_hub_forecasts(
-  repo_dir      = rsv_repo_dir,
-  disease       = "rsv",
-  hub_name      = "RSV Forecast Hub",
-  target_date   = forecast_date,
-  loc_ids       = state_location_ids
-)
-if (nrow(rsv_forecasts) > 0 && "model" %in% names(rsv_forecasts)) {
-  # Change "RSVHub-ensemble" to match the actual ensemble model folder name in the RSV repo if different
-  rsv_forecasts <- rsv_forecasts %>% dplyr::filter(model == "RSVHub-ensemble")
-}
+  repo_dir    = rsv_repo_dir,
+  disease     = "rsv",
+  hub_name    = "RSV Forecast Hub",
+  forecast_date = hub_date,
+  loc_ids     = state_location_ids
+) %>%
+  dplyr::filter(model == "RSVHub-ensemble")
 
 ```
 
